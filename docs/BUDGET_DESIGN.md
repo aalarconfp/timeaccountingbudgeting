@@ -4,6 +4,12 @@
 
 Future feature.
 
+Preparatory analysis available: `historical_annual.py` builds a historical
+baseline, data-supported reference ranges per budget line and three scenario
+templates (Sustainable, Goal-focused, Conservative), plus a register of
+decisions needed before a first budget (`HISTORICAL_ANNUAL_ANALYSIS.md`).
+These are analytical templates, not an implemented or approved budget.
+
 The budget should be constructed from current goals and the analytical
 taxonomy rather than imposed independently of the time model.
 

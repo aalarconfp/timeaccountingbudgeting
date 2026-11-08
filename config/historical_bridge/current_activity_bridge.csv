@@ -1,0 +1,47 @@
+current_source,current_category,current_subcategory,bridge_group,bridge_status,rationale
+*,Productivity & Finance,Office Tools,WORK_STUDY,HIGH_CONFIDENCE,Work/study documents and spreadsheets.
+*,Productivity & Finance,Financial Analysis Projects,WORK_STUDY,HIGH_CONFIDENCE,Projects.
+*,Productivity & Finance,Offline Work Tracking,WORK_STUDY,HIGH_CONFIDENCE,Off-screen work (Habit).
+*,Productivity & Finance,Personal Brand & Portfolio Site,WORK_STUDY,REVIEW_REQUIRED,"Side project / content brand; legacy could have recorded it as Work / Study or Hobbies."
+*,Productivity & Finance,Job Search,WORK_STUDY,REVIEW_REQUIRED,Career activity; legacy placement not documented.
+*,Productivity & Finance,Email,PERSONAL_ADMIN,HIGH_CONFIDENCE,Legacy Personal Admin examples include email.
+*,Productivity & Finance,Banking,PERSONAL_ADMIN,HIGH_CONFIDENCE,Legacy Personal Admin examples include banking.
+*,Productivity & Finance,Equity Research & Investing,PERSONAL_ADMIN,HIGH_CONFIDENCE,"Legacy Personal Admin examples include personal finance; legacy Report 1 comment on Personal Admin: 'Overtime - Investment Strategy'."
+*,Productivity & Finance,Time Tracking Tool,PERSONAL_ADMIN,HIGH_CONFIDENCE,Legacy Personal Admin examples include habit trackers.
+*,Productivity & Finance,Family Business Admin,PERSONAL_ADMIN,REVIEW_REQUIRED,Could be Work / Study.
+*,Productivity & Finance,Business Operations & Invoicing,PERSONAL_ADMIN,REVIEW_REQUIRED,Could be Work / Study.
+*,Productivity & Finance,Uncategorized,UNCLASSIFIED,UNMAPPED,Unclassified ActivityWatch time (classification-weight split).
+AppleScreenTime,Productivity & Finance,Productivity & Finance,PERSONAL_ADMIN,REVIEW_REQUIRED,"Generic iOS bucket (mail, banking, notes, documents). Legacy phone time of this kind was mostly entered as Personal Admin; some may have been Work / Study."
+*,Education,University Program Admin,WORK_STUDY,REVIEW_REQUIRED,Formal study administration; legacy 'Work / Study' includes study.
+*,Education,Offline Study Tracker,WORK_STUDY,REVIEW_REQUIRED,"Formal study / university classes (Habit). Legacy 'Work / Study' includes study; legacy 'Learning' was self-directed."
+*,Education,AI Tools Learning,LEARNING,REVIEW_REQUIRED,"AI-tool usage; part may be work or thesis rather than skill-building."
+*,Education,*,LEARNING,HIGH_CONFIDENCE,Online courses / certifications = legacy Learning / Skill-building.
+AppleScreenTime,Education,Education,LEARNING,HIGH_CONFIDENCE,Phone learning apps.
+*,Information & Reading,Read a book,LEARNING,HIGH_CONFIDENCE,Legacy row 'Reading Books/Journaling' (Learning).
+*,Information & Reading,Journaling,LEARNING,HIGH_CONFIDENCE,Legacy row 'Reading Books/Journaling' (Learning).
+*,Information & Reading,Podcasts,LEARNING,REVIEW_REQUIRED,Legacy listed podcasts as a Passive example without a category.
+*,Information & Reading,Personal Reading & News,LEARNING,REVIEW_REQUIRED,Web reading; part may be browsing (Entertainment).
+*,Information & Reading,*,LEARNING,REVIEW_REQUIRED,Generic reading bucket.
+*,News,*,LEARNING,REVIEW_REQUIRED,News reading; legacy placement not documented.
+*,Social Networking,Messaging,COMMUNICATION,HIGH_CONFIDENCE,Legacy Communication / Social = messaging.
+*,Social Networking,Meetings,WORK_STUDY,REVIEW_REQUIRED,Legacy Work / Study examples include meetings.
+*,Social Networking,Career Networking,WORK_STUDY,REVIEW_REQUIRED,LinkedIn / career networking.
+*,Social Networking,Social Feeds,ENTERTAINMENT,HIGH_CONFIDENCE,Legacy Entertainment examples include social media.
+*,Social Networking,Family Time Tracking,RELATIONSHIPS_SOCIAL,HIGH_CONFIDENCE,Legacy Relationships / Social > Family.
+*,Social Networking,Social Time Tracking,RELATIONSHIPS_SOCIAL,HIGH_CONFIDENCE,Legacy Relationships / Social > Friends.
+AppleScreenTime,Social Networking,Social Networking,DIGITAL_SOCIAL_UNSPLIT,REVIEW_REQUIRED,"Generic iOS Social bucket mixes messaging and feeds; cannot be split between COMMUNICATION and ENTERTAINMENT."
+*,Games,*,ENTERTAINMENT,HIGH_CONFIDENCE,Legacy Entertainment examples include gaming.
+*,Entertainment,*,ENTERTAINMENT,HIGH_CONFIDENCE,Streaming / video / music / TV.
+*,Creativity,Guitar Practice,HOBBIES_CREATIVE,HIGH_CONFIDENCE,Legacy Hobbies > Guitar.
+*,Creativity,*,HOBBIES_CREATIVE,REVIEW_REQUIRED,"Media editing / creative apps; could relate to the content brand (Work / Study)."
+*,Health & Fitness,*,HEALTH_WELLNESS,HIGH_CONFIDENCE,"Sleep, workout, meditation, reflection, health apps."
+*,Travel,Motorcycle Time,HOBBIES_CREATIVE,HIGH_CONFIDENCE,Legacy Hobbies > Motorcycle.
+*,Travel,*,PERSONAL_ADMIN,REVIEW_REQUIRED,Trip booking / maps / ride apps.
+*,Shopping & Food,Online Shopping,PERSONAL_ADMIN,HIGH_CONFIDENCE,Legacy Personal Admin examples include shopping.
+*,Shopping & Food,Motorcycle & Vehicle Admin,PERSONAL_ADMIN,HIGH_CONFIDENCE,Errands / admin.
+*,Shopping & Food,*,PERSONAL_ADMIN,REVIEW_REQUIRED,Food delivery / tickets / generic shopping apps.
+*,Utilities,Personal Time Tracking,PERSONAL_ADMIN,REVIEW_REQUIRED,"Habit 'Personal Time Tracking'; closest legacy equivalent is the off-device Personal Admin row."
+*,Utilities,Personal Notes & Meta,PERSONAL_ADMIN,REVIEW_REQUIRED,Notes / personal organisation.
+*,Utilities,Uncategorized,UNCLASSIFIED,UNMAPPED,Unclassified ActivityWatch time (classification-weight split).
+*,Utilities,*,UTILITIES_SYSTEM,HIGH_CONFIDENCE,"System processes, iOS Utilities / Screen Time / Other buckets. No legacy equivalent."
+Off-Device,Off-Device Life,*,RESIDUAL,HIGH_CONFIDENCE,"Inferred time-universe residual. Not recorded time; treated as unresolved time in the bridge."

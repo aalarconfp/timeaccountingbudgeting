@@ -12,6 +12,8 @@
 #   Pillow    : screenshot image handling (iphone_screen_time_ingest.py,
 #               habit_screenshot_ingest.py bar charts); >=9.1 for Image.Resampling
 #   tzdata    : America/Bogota timezone on Windows
+#   openpyxl  : historical pipeline only (reads the legacy Excel workbooks;
+#               historical_legacy_loader.py)
 #
 # import_desktop_activitywatch.py is stdlib-only.
 # The Desktop Tracker Collector project needs only aw-client + tzdata.
@@ -20,3 +22,4 @@ aw-client
 openai
 Pillow>=9.1
 tzdata
+openpyxl

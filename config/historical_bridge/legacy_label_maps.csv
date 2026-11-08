@@ -1,0 +1,19 @@
+dimension,legacy_value,canonical_value,status,rationale
+energy,Deep Work,Deep,HIGH_CONFIDENCE,"Same concept (focused, cognitively demanding work)."
+energy,Shallow Work,Shallow,HIGH_CONFIDENCE,"Same concept (email triage, quick edits)."
+energy,Passive,Passive,HIGH_CONFIDENCE,"Same label on device rows (podcasts, TV, social media, gaming). On off-device rows the legacy label 'Passive' was also used for family/friends time, which the current taxonomy classifies as Active; those rows are re-classified by activity in legacy_activity_bridge.csv."
+energy,Recovery / Rest,,REVIEW_REQUIRED,"Legacy 'Recovery / Rest' (target 45-55%) bundles sleep, workout, eating/shower, motorcycle, guitar and phone learning/health apps. Current 'Recovery' is narrower (sleep, meditation, reflection). No label-level mapping; off-device activities are re-classified by activity equivalence instead."
+goal,High-Value,Investment,HIGH_CONFIDENCE,"Goal-focused work = Investment. Note: legacy also marked Sleep, Motorcycle and Vacations as High-Value; those rows are re-classified by activity equivalence."
+goal,Maintenance,Maintenance,HIGH_CONFIDENCE,Same label and definition (bills, errands).
+goal,Low-Value / Drift,Consumption,HIGH_CONFIDENCE,"Random scrolling / distraction = discretionary consumption."
+device,Phone,PHONE,HIGH_CONFIDENCE,"Legacy Categories sheet: Phone values came from Screen Time iOS. Current: Apple Screen Time (iPhone)."
+device,Laptop,LAPTOP,HIGH_CONFIDENCE,"Legacy Categories sheet: Laptop values came from ActivityWatch. Device class matches; whether it was the same physical laptop as the current AsusLaptop-Andres is not documented (REVIEW for machine identity)."
+device,PC Desktop,DESKTOP,HIGH_CONFIDENCE,"Legacy Categories sheet: PC Desktop values came from ActivityWatch. Current: DesktopPC-Andres."
+device,TV,TV,REVIEW_REQUIRED,"Legacy TV rows were manual entries ('Phone/Other trackers'). Current equivalent is the Habit row 'TV Time tracking'."
+device,Off-Device,OFF_DEVICE_RECORDED,REVIEW_REQUIRED,"Legacy Off-Device = manually recorded off-screen activity incl. sleep and standard allocations. Current equivalent = Habit rows (manual / screenshot) only; the current inferred residual is NOT recorded time and is kept separate."
+device,Tablet,TABLET,UNMAPPED,"Listed in the legacy vocabulary; never used in a timesheet row."
+device,Console,CONSOLE,UNMAPPED,"Listed in the legacy vocabulary; never used in a timesheet row."
+time_of_day,Morning,,NOT_COMPARABLE,"2025: Personal Admin and Entertainment phone rows were split Morning/Midday/Evening. From Jan 2026 the Midday/Evening rows were removed and the 'Morning' row is the only phone row for those categories, so the label no longer describes time of day. The current system has no time-of-day dimension."
+time_of_day,Midday,,NOT_COMPARABLE,"Used as a default label on all laptop/desktop/TV rows regardless of actual time of day."
+time_of_day,Evening,,NOT_COMPARABLE,Only used on 2025 phone rows (removed Jan 2026).
+time_of_day,Off Hours,,NOT_COMPARABLE,"Default label on all off-device rows, including sleep."

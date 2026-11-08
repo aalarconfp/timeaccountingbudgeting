@@ -4,6 +4,10 @@
 
 Planned operational step.
 
+Phase 2 (legacy workbooks Sep 2025 – Jul 2026 bridged to the current
+accounting) is implemented as a reproducible pipeline — see
+`HISTORICAL_BRIDGE.md` and `historical_pipeline.py`.
+
 The initial system has approximately one year of historical data that was
 integrated through a controlled manual process.
 

@@ -195,6 +195,11 @@ Category
 
 It will enable planned-versus-actual analysis and budget variance measurement.
 
+A first analytical step exists: `historical_annual.py` produces a historical
+baseline and budget *scenario templates* from the bridged history
+(`docs/HISTORICAL_ANNUAL_ANALYSIS.md`). It does not implement or approve a
+budget; outputs stay in the git-ignored `output/` folder.
+
 ---
 
 # Core Architecture

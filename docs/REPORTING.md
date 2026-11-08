@@ -62,3 +62,10 @@ The report should identify:
 5. next-period attention areas.
 
 Use EDA for everything deeper.
+
+## Reporting cadence
+
+- **Interim review (~15 days):** operational, provisional; does not close the period.
+- **Monthly close:** authoritative; `PERIOD_CLOSE_CHECKLIST.md`.
+
+See `INTERIM_REVIEW_PROCEDURE.md`.

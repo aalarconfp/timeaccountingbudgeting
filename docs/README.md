@@ -53,7 +53,10 @@ the same elapsed time. Taxonomy: 12 categories, 7 domains, 5 energies, 3 goals.
 - `INTEGRATION_AND_RECONCILIATION.md` — consolidation and adjustment rules
 - `TAXONOMY_AND_EDA.md` — taxonomy, hierarchy, EDA
 - `REPORTING.md` — Standard Report and recurring KPI definitions
+- `INTERIM_REVIEW_PROCEDURE.md` — ~15-day operational review vs. monthly close; Notion report flow
 - `HISTORICAL_DATA_INTEGRATION.md` — one-year historical integration procedure
+- `HISTORICAL_BRIDGE.md` — Phase 2 legacy-to-current bridge: architecture, mapping tables, accounting rules
+- `HISTORICAL_ANNUAL_ANALYSIS.md` — annual analysis in the current taxonomy (Standard Report / EDA / Final Detail analogues), legacy-to-current mapping, budget baseline, scenario templates and the proxy-allocation worksheet workflow
 - `BUDGET_DESIGN.md` — future budget design
 - `TROUBLESHOOTING.md` — common failures and recovery
 - `CHANGE_CONTROL.md` — rules for changing the analytical system
