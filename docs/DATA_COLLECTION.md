@@ -9,7 +9,7 @@ reconciliation.
 
 | Source | Device | How it enters System Tracker |
 |---|---|---|
-| ActivityWatch — laptop | `<laptop device>` | `activitywatch_laptop.py` → `activitywatch_pipeline.py` (run on the laptop) |
+| ActivityWatch — laptop | `<laptop device>` | `activitywatch_laptop.py` → `activitywatch_pipeline.py` → `daily_time_builder.py` (run on the laptop) |
 | ActivityWatch — desktop | `<desktop device>` | **imported** from the Desktop Tracker Collector via `import_desktop_activitywatch.py` |
 | Apple Screen Time | iPhone | screenshots under `input/iPhone/ScreenTime/<YYYY-MM>/<YYYY-MM-DD>/` → `iphone_screen_time_*` |
 | Habit / Off-Device | — | screenshots under `input/Habit/<YYYY-MM>/` + evidence index/manifest → `habit_screenshot_*` |
@@ -64,12 +64,16 @@ share the same `activitywatch_raw_loader.py`).
 Run on the laptop (`<laptop device>`):
 
 ```powershell
-python .\activitywatch_laptop.py --start-date "<START>" --end-date "<END>" --force
+$env:PYTHONUTF8 = "1"   # Windows console: avoids UnicodeEncodeError on "→"
+python .\activitywatch_laptop.py --start-date "<START>" --end-date "<END>"
 python .\activitywatch_pipeline.py --month "<YYYY-MM>"    # or repeated --date
+python .\daily_time_builder.py --source asus_laptop --start-date "<START>" --end-date "<END>"
 ```
 
+`activitywatch_laptop.py` has no `--force` (the loader is idempotent).
 `activitywatch_pipeline.py` chains `activitywatch_raw_loader.py` →
-`fact_time_builder.py` → `fact_time_validator.py` for the laptop.
+`fact_time_builder.py` → `fact_time_validator.py` for the laptop; it does not
+build `Daily_Time`, so `daily_time_builder.py` runs last.
 
 ### Desktop — import a validated package
 

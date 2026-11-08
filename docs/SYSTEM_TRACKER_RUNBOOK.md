@@ -112,13 +112,18 @@ reporting-period destination directories.
 ### B1. ActivityWatch — laptop  *(run on the laptop, `<laptop device>`)*
 
 ```powershell
-python .\activitywatch_laptop.py --start-date "2026-09-01" --end-date "2026-09-30" --force
+$env:PYTHONUTF8 = "1"   # Windows console: avoids UnicodeEncodeError on "→" in script output
+python .\activitywatch_laptop.py --start-date "2026-09-01" --end-date "2026-09-30"
 python .\activitywatch_pipeline.py --month "2026-09"
+python .\daily_time_builder.py --source asus_laptop --start-date "2026-09-01" --end-date "2026-09-30"
 ```
 
+`activitywatch_laptop.py` takes no `--force`: the raw loader is idempotent
+(keyed on `AW_Event_ID`), so re-runs never duplicate events.
 `activitywatch_pipeline.py` runs `activitywatch_raw_loader.py` →
-`fact_time_builder.py` → `fact_time_validator.py` for the laptop. It is
-laptop-only.
+`fact_time_builder.py` → `fact_time_validator.py` for the laptop. It does
+**not** build `Daily_Time`; `daily_time_builder.py` does (also listed in C1).
+All of these are laptop-only.
 
 ### B2. ActivityWatch — desktop  *(import from Desktop Tracker Collector)*
 
@@ -165,7 +170,8 @@ before processing.
 
 ### C1. Laptop / desktop Daily_Time
 
-Laptop `Daily_Time` is produced by `activitywatch_pipeline.py` (B1). Desktop
+Laptop `Daily_Time` is built by `daily_time_builder.py` (last command of B1;
+`activitywatch_pipeline.py` stops at validated Fact_Time). Desktop
 `Daily_Time` arrives in the import package (B2). If either is missing for a
 date, build it explicitly:
 
@@ -254,7 +260,7 @@ Produces `output/Integrated/Integrated_Daily_Time_<date>.csv`. This must run
 ### D2. Preliminary integration analysis + human-review template
 
 ```powershell
-python .\integration_analysis.py --start-date "2026-09-01" --end-date "2026-09-30" --unaccounted-target-hours 3
+python .\integration_analysis.py --start-date "2026-09-01" --end-date "2026-09-30" --unaccounted-target-hours 4
 python .\integration_human_review.py --start-date "2026-09-01" --end-date "2026-09-30"
 ```
 
@@ -284,7 +290,14 @@ python .\habit_manual_adjustments.py `
     --adjustment-file ".\input\Integrated\Habit_Manual_Adjustments.csv" --force
 ```
 
-Re-run D1 if the adjustments changed the integrated inputs.
+`final_analysis.py` (E1) applies every row of `Habit_Manual_Adjustments.csv`
+itself, so Habit `Daily_Time` and Integrated Daily Time must stay
+**pre-adjustment**. Do not rebuild D1 from adjusted Habit files: the addition
+would be counted twice (found in October 2026). If D1 must be re-run after this
+step, first restore the affected Habit days from
+`output\Analysis\Habit\PreAdjustment\<date>\` (or re-run
+`habit_screenshot_builder.py`). To add or change an adjustment later, edit the
+CSV and re-run only E1.
 
 ---
 
@@ -437,7 +450,7 @@ integrated_daily_time_builder            ← produces Integrated_Daily_Time
         ↓
 integration_analysis  +  integration_human_review
         ↓
-manual review → habit_manual_adjustments → (rebuild integrated daily)
+manual review → habit_manual_adjustments (applied once, in final_analysis)
         ↓
 final_analysis
         ↓

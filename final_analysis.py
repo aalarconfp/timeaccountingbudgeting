@@ -54,7 +54,8 @@ CATEGORY_TAXONOMY_FILE = (
 DAY_MINUTES = 1440.0
 DAY_SECONDS = DAY_MINUTES * 60.0
 
-RECONCILIATION_TOLERANCE_MIN = 120.0
+# A day is flagged REVIEW only when uncovered (or overlap) time exceeds 4 h.
+RECONCILIATION_TOLERANCE_MIN = 240.0
 
 UNCATEGORIZED_CATEGORY = (
     "Uncategorized"
@@ -2268,7 +2269,7 @@ def build_report(
     else:
         lines.append(
             "All days are within the "
-            "2-hour reconciliation tolerance."
+            f"{RECONCILIATION_TOLERANCE_MIN / 60:g}-hour reconciliation tolerance."
         )
 
         lines.append(

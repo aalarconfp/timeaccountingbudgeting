@@ -12,6 +12,7 @@ Desktop Tracker Collector                 System Tracker (this repo)
           │                                ┌─ Laptop ActivityWatch
           │  portable, versioned           │    activitywatch_laptop.py
           │  export package                │    → activitywatch_pipeline.py
+          │                                │    → daily_time_builder.py
           └───────────────────────────────►│─ import_desktop_activitywatch.py
                                            │    (contract check, closed-period
                                            │     protection, import receipt)
