@@ -161,12 +161,14 @@ def read_phases(ws) -> list[core.Phase]:
     for r in PHASE_ROWS:
         name = _text(ws.cell(r, 1).value)
         if not name:
-            raise BudgetImportError(f"{ws.title}!A{r}: empty phase name.")
+            break
         phases.append(core.Phase(
             name,
             _as_date(ws.cell(r, 2).value, f"{ws.title}!B{r}"),
             _as_date(ws.cell(r, 3).value, f"{ws.title}!C{r}"),
         ))
+    if not phases:
+        raise BudgetImportError(f"{ws.title}!A{PHASE_ROWS.start}: no phases found.")
     return phases
 
 
