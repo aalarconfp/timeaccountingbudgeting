@@ -133,6 +133,16 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--require-budget",
+        action="store_true",
+        help=(
+            "Require the Actual vs Budget analysis "
+            "(budget_variance_analysis.py): coverage reported and the "
+            "period budget reconciles to covered days x 24 h."
+        ),
+    )
+
+    parser.add_argument(
         "--require-historical",
         action="store_true",
         help=(
@@ -1386,6 +1396,7 @@ def validate_period_close(
     require_eda: bool,
     require_standard_report: bool,
     require_historical: bool,
+    require_budget: bool = False,
 ) -> Validator:
     """Run all period-close validation checks."""
     validator = Validator()
@@ -1659,7 +1670,109 @@ def validate_period_close(
             "Not required by this validation run.",
         )
 
+    if require_budget:
+        validate_budget(validator, project_root, start, end)
+
     return validator
+
+
+def validate_budget(
+    validator: Validator,
+    project_root: Path,
+    start: date,
+    end: date,
+) -> None:
+    """Validate the Actual vs Budget layer (optional, --require-budget)."""
+    import budget_core
+
+    label = period_label(start, end)
+    directory = (
+        project_root / "output" / "Integrated" / "Analysis" / "Budget" / label
+    )
+    coverage_file = directory / f"Budget_Coverage_{label}.csv"
+    validator.check(
+        "Budget analysis exists",
+        coverage_file.exists(),
+        str(coverage_file),
+    )
+    if not coverage_file.exists():
+        return
+
+    row = budget_core.read_csv(coverage_file)[0]
+    version = row.get("Budget_Version", "")
+    try:
+        snapshot = budget_core.load_snapshot(
+            project_root / "output" / "Reference" / "Budget",
+            version or None,
+        )
+    except budget_core.BudgetNotAvailable as exc:
+        validator.check("Budget snapshot", False, str(exc))
+        return
+    validator.check(
+        "Budget snapshot",
+        True,
+        f"Version {snapshot.version} (hashes match the manifest).",
+    )
+
+    cov = budget_core.coverage(snapshot, start, end)
+    reported_days = int(budget_core.number(row.get("Covered_Days")))
+    reported_pct = budget_core.number(row.get("Coverage_pct"))
+    validator.check(
+        "Budget coverage reported",
+        reported_days == cov.covered_days
+        and abs(reported_pct - cov.ratio * 100.0) < 0.01,
+        (
+            f"{reported_days}/{int(budget_core.number(row.get('Period_Days')))} "
+            f"days ({reported_pct:.1f}%) reported; recomputed "
+            f"{cov.covered_days}/{cov.period_days}."
+        ),
+    )
+    validator.check(
+        "Budget covers the period",
+        cov.covered_days > 0,
+        (
+            cov.describe()
+            if cov.covered_days
+            else cov.describe() + " Do not use --require-budget for this period."
+        ),
+    )
+    if not cov.covered_days:
+        return
+
+    budget = sum(
+        entry["Budget_min"]
+        for entry in budget_core.period_leaf_budget(snapshot, start, end).values()
+    )
+    expected = cov.covered_days * 1440.0
+    tolerance = budget_core.cfg.PERIOD_BUDGET_TOLERANCE_MIN
+    validator.check(
+        "Budget reconciles to covered days x 24 h",
+        abs(budget - expected) <= tolerance
+        and abs(budget_core.number(row.get("Budget_Total_min")) - budget) <= tolerance,
+        (
+            f"Σ budget {budget:,.2f} min; expected {expected:,.0f} min; "
+            f"analysis reports {budget_core.number(row.get('Budget_Total_min')):,.2f}."
+        ),
+    )
+
+    leaf_file = directory / f"Budget_Variance_Leaf_{label}.csv"
+    leaf_budget = sum(
+        budget_core.number(r.get("Budget_min"))
+        for r in budget_core.read_csv(leaf_file)
+    ) if leaf_file.exists() else 0.0
+    validator.check(
+        "Budget leaf variance file",
+        leaf_file.exists() and abs(leaf_budget - budget) <= tolerance,
+        f"{leaf_file.name}: Σ budget {leaf_budget:,.2f} min.",
+    )
+
+    report = directory / f"Budget_Variance_Report_{label}.txt"
+    validator.check(
+        "Budget variance report",
+        report.exists()
+        and "Budget coverage" in report.read_text(encoding="utf-8"),
+        str(report),
+    )
 
 
 def main() -> int:
@@ -1690,6 +1803,7 @@ def main() -> int:
             require_historical=(
                 args.require_historical
             ),
+            require_budget=args.require_budget,
         )
 
     except Exception as exc:
