@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time Accounting Dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --surface-2: #f3f2ee;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6; --good: #006300; --bad: #d03b3b; --warn: #b77900;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --other: #b9b8b1;
+  --heat-0: #ffffff; --heat-rgb: 42,120,214;
+  --div-neg: #e34948; --div-pos: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #232321;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --accent: #3987e5; --good: #0ca30c; --bad: #e66767; --warn: #fab219;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --other: #5c5b57; --heat-rgb: 57,135,229;
+    --div-neg: #e66767; --div-pos: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --surface-2: #232321;
+  --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --accent: #3987e5; --good: #0ca30c; --bad: #e66767; --warn: #fab219;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --other: #5c5b57; --heat-rgb: 57,135,229;
+  --div-neg: #e66767; --div-pos: #3987e5;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header.top {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.top-inner { max-width: 1320px; margin: 0 auto; padding: 14px 24px 0; }
+.title-row { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+.sub { color: var(--muted); font-size: 12px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+select, button {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+}
+button { cursor: pointer; }
+button:hover, select:hover { background: var(--surface-2); }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; margin-top: 10px; scrollbar-width: none; }
+nav.tabs button {
+  border: 0; border-radius: 0; background: none; padding: 10px 14px;
+  color: var(--ink-2); border-bottom: 2px solid transparent; white-space: nowrap;
+}
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+main { max-width: 1320px; margin: 0 auto; padding: 20px 24px 60px; }
+section.tab { display: none; }
+section.tab.active { display: block; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+@media (max-width: 900px) { .g2, .g3 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; min-width: 0;
+}
+.card h2 { font-size: 14px; margin: 0 0 2px; font-weight: 620; }
+.card .hint { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+.section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 26px 0 10px; font-weight: 600; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.tile .k { color: var(--ink-2); font-size: 12px; }
+.tile .v { font-size: 26px; font-weight: 640; letter-spacing: -0.02em; margin: 2px 0; }
+.tile .d { font-size: 12px; color: var(--muted); }
+.up-good, .down-good { color: var(--good); }
+.up-bad, .down-bad { color: var(--bad); }
+.neutral { color: var(--ink-2); }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2);
+}
+.badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+.statusbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 16px; color: var(--ink-2); font-size: 13px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 10px; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.stack100 { display: flex; height: 26px; border-radius: 6px; overflow: hidden; gap: 2px; background: var(--surface); }
+.stack100 div { height: 100%; min-width: 2px; }
+.s100-row { margin-bottom: 14px; }
+.s100-row .lab { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.hbars { display: grid; gap: 7px; }
+.hbar { display: grid; grid-template-columns: minmax(110px, 34%) 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.hbar .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.hbar .track { height: 12px; position: relative; }
+.hbar .fill { height: 100%; border-radius: 0 4px 4px 0; }
+.hbar .val { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 12px; white-space: nowrap; text-align: right; min-width: 120px; }
+.div-track { height: 12px; position: relative; }
+.div-track .mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--axis); }
+.div-track .fill { position: absolute; top: 0; height: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 11.5px; position: sticky; top: 0; background: var(--surface); }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.cat-row { cursor: pointer; font-weight: 600; }
+tr.cat-row:hover td { background: var(--surface-2); }
+tr.sub-row td:first-child { padding-left: 28px; color: var(--ink-2); }
+tr.sub-row.hidden { display: none; }
+.caret { display: inline-block; width: 12px; color: var(--muted); }
+.scroll { overflow: auto; max-height: 520px; }
+.tag { font-size: 11px; color: var(--ink-2); background: var(--surface-2); border-radius: 4px; padding: 1px 6px; margin-right: 3px; white-space: nowrap; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.filters label { font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+ul.notes { margin: 0; padding-left: 18px; }
+ul.notes li { margin-bottom: 6px; }
+.note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.empty { color: var(--muted); font-style: italic; padding: 12px 0; }
+.phase-bar { display: flex; gap: 2px; height: 34px; border-radius: 8px; overflow: hidden; margin: 6px 0 4px; }
+.phase-bar div { display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.phase-bar div.cur { outline: 2px solid var(--ink); outline-offset: -2px; }
+#tip {
+  position: fixed; pointer-events: none; z-index: 50; display: none;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.14);
+  max-width: 320px;
+}
+#tip .t { font-weight: 600; margin-bottom: 4px; }
+#tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+#tip .r span:last-child { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 5px 10px; font-size: 12px; }
+.seg button.on { background: var(--ink); color: var(--surface); }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+@media (max-width: 600px) {
+  .top-inner, main { padding-left: 16px; padding-right: 16px; }
+  .hbar { grid-template-columns: 1fr auto; }
+  .hbar .track { grid-column: 1 / -1; order: 3; }
+  .tile .v { font-size: 20px; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tile { padding: 12px; }
+  .hbar .val { min-width: 0; }
+  .sub { overflow-wrap: anywhere; }
+}
+.badge { white-space: normal; }
+body { overflow-x: hidden; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="title-row">
+      <div>
+        <h1>Time Accounting Dashboard</h1>
+        <div class="sub" id="gen"></div>
+      </div>
+      <div class="controls">
+        <label class="sub" for="monthSel">Mes</label>
+        <select id="monthSel"></select>
+        <button id="themeBtn" title="Cambiar tema">◐</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+  </div>
+</header>
+<main>
+  <section class="tab" id="tab-overview"></section>
+  <section class="tab" id="tab-history"></section>
+  <section class="tab" id="tab-taxonomy"></section>
+  <section class="tab" id="tab-daily"></section>
+  <section class="tab" id="tab-compare"></section>
+  <section class="tab" id="tab-budget"></section>
+  <section class="tab" id="tab-quality"></section>
+</main>
+<div id="tip"></div>
+
+<script>
+const DATA = /*__DASHBOARD_DATA__*/null;
+</script>
+<script>
+"use strict";
+/* ------------------------------------------------------------------ setup */
+const D = DATA;
+const FI = {}; D.fact_dims.forEach((d, i) => FI[d] = i + 1);
+const MIN_I = D.fact_dims.length + 1;
+const MONTHS = D.months.map(m => {
+  const rows = m.fact.map(r => {
+    const o = { d: r[0], min: r[MIN_I] };
+    D.fact_dims.forEach(dim => o[dim] = D.dict[dim][r[FI[dim]]]);
+    return o;
+  });
+  return Object.assign({}, m, { rows });
+});
+const BY_KEY = Object.fromEntries(MONTHS.map(m => [m.key, m]));
+const S = { month: MONTHS[MONTHS.length - 1].key, tab: "overview",
+            histDim: "Goal", dailyDim: "Goal", cmpDim: "Category",
+            cmpA: null, cmpB: null, taxF: {}, budgetPhase: null, budgetMonth: null };
+
+const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DOW = ["dom","lun","mar","mié","jue","vie","sáb"];
+const monthShort = k => MES[+k.slice(5, 7) - 1] + " " + k.slice(2, 4);
+const monthLong = k => MES_L[+k.slice(5, 7) - 1] + " " + k.slice(0, 4);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmtN = (v, d = 0) => (v == null || isNaN(v)) ? "—" : v.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtHM = min => { if (min == null || isNaN(min)) return "—"; const s = min < 0 ? "−" : ""; min = Math.abs(min);
+  let h = Math.floor(min / 60), m = Math.round(min - h * 60); if (m === 60) { h++; m = 0; }
+  return h ? `${s}${h}h ${String(m).padStart(2, "0")}m` : `${s}${m}m`; };
+const fmtH = min => fmtN(min / 60, 1) + " h";
+const fmtPct = (v, d = 1) => v == null || isNaN(v) ? "—" : fmtN(v, d) + "%";
+const sgn = (v, f) => (v > 0 ? "+" : v < 0 ? "−" : "±") + f(Math.abs(v));
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* --------------------------------------------------------- color identity */
+const SLOTS = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
+const FIXED_ORDER = {
+  Goal: ["Investment", "Consumption", "Maintenance"],
+  Energy: ["Deep", "Active", "Recovery", "Shallow", "Passive"],
+  Domain: ["Physical", "Vocational", "Relational", "Intellectual", "Recreational", "Economical", "Spiritual"],
+};
+function rankAll(dim) {
+  const t = {};
+  MONTHS.forEach(m => m.rows.forEach(r => t[r[dim]] = (t[r[dim]] || 0) + r.min));
+  return Object.keys(t).sort((a, b) => t[b] - t[a]);
+}
+const ORDER = {
+  Goal: FIXED_ORDER.Goal, Energy: FIXED_ORDER.Energy, Domain: FIXED_ORDER.Domain,
+  Category: rankAll("Category"), Device: rankAll("Device"), Source: rankAll("Source"),
+  Allocation_Type: rankAll("Allocation_Type"),
+};
+function colorOf(dim, value) {
+  const order = ORDER[dim] || [];
+  const i = order.indexOf(value);
+  return (i >= 0 && i < 7) || (i === 7 && order.length === 8) ? `var(${SLOTS[i]})` : "var(--other)";
+}
+/* Fold a breakdown into at most 8 fixed-color series (rest -> "Otras"). */
+function foldSeries(dim, values) {
+  const order = ORDER[dim] || [];
+  const keep = order.length <= 8 ? order : order.slice(0, 7);
+  const out = keep.filter(v => values.includes(v));
+  const rest = values.filter(v => !keep.includes(v));
+  return { keep: out, rest };
+}
+const LABEL_ES = { Goal: "Objetivo", Energy: "Energía", Domain: "Dominio", Category: "Categoría",
+  Subcategory: "Subcategoría", Device: "Dispositivo", Activity: "Actividad", Source: "Fuente",
+  Allocation_Type: "Tipo de asignación" };
+
+/* --------------------------------------------------------------- metrics */
+function agg(rows, dim, filter) {
+  const t = {};
+  for (const r of rows) if (!filter || filter(r)) t[r[dim]] = (t[r[dim]] || 0) + r.min;
+  return t;
+}
+const sum = (rows, filter) => rows.reduce((a, r) => a + (!filter || filter(r) ? r.min : 0), 0);
+const prevOf = m => { const i = MONTHS.indexOf(m); return i > 0 ? MONTHS[i - 1] : null; };
+const isSleep = r => r.Subcategory === "Sleep" && r.Category === "Health & Fitness";
+const isDisc = r => ["Games", "Entertainment", "Social Networking"].includes(r.Category) && r.Goal === "Consumption";
+
+function kpis(m) {
+  const rows = m.rows, days = m.days;
+  const total = sum(rows);
+  const off = sum(rows, r => r.Device === "Off-Device");
+  const g = agg(rows, "Goal");
+  const e = agg(rows, "Energy");
+  const rc = m.recon || [];
+  const corrected = rc.reduce((a, r) => a + r[2], 0);
+  const original = rc.reduce((a, r) => a + r[1], 0);
+  const overlap = rc.reduce((a, r) => a + r[4], 0);
+  const correction = rc.reduce((a, r) => a + r[3], 0);
+  const unique = rc.length ? corrected - overlap : total - off;
+  const inv = g.Investment || 0, mai = g.Maintenance || 0, con = g.Consumption || 0;
+  return {
+    days, capacity: days * 1440, total, off, unique, original, corrected, overlap, correction,
+    coverage: unique / (days * 1440) * 100,
+    invRatio: inv / ((inv + mai + con) || 1) * 100,
+    inv: inv / days, mai: mai / days, con: con / days,
+    sleepH: sum(rows, isSleep) / days / 60,
+    disc: sum(rows, isDisc) / days,
+    deep: (e.Deep || 0) / days, recovery: (e.Recovery || 0) / days,
+    workout: sum(rows, r => r.Subcategory === "Workout") / days,
+    family: sum(rows, r => r.Subcategory === "Family Time Tracking") / days,
+    reading: sum(rows, r => ["Journaling", "Read a book"].includes(r.Subcategory)) / days,
+    offDay: off / days,
+    reviewDays: rc.filter(r => r[7] !== "NORMAL_TOLERANCE").length,
+  };
+}
+const KPI_DEFS = [
+  { k: "coverage", n: "Cobertura registrada", f: v => fmtPct(v), dir: 1, dfmt: v => fmtN(v, 1) + " pp", hint: "Tiempo único registrado / capacidad" },
+  { k: "invRatio", n: "Ratio de inversión", f: v => fmtPct(v), dir: 1, dfmt: v => fmtN(v, 1) + " pp", hint: "Inversión / (Inv + Mant + Cons)" },
+  { k: "sleepH", n: "Sueño por noche", f: v => fmtN(v, 2) + " h", dir: 1, dfmt: v => fmtN(v * 60, 0) + " min", hint: "Piso presupuesto 7,5 h" },
+  { k: "disc", n: "Consumo discrecional", f: v => fmtHM(v) + "/d", dir: -1, dfmt: v => fmtHM(v), hint: "Games + Entertainment + Social (Consumption)" },
+  { k: "deep", n: "Energía Deep", f: v => fmtHM(v) + "/d", dir: 1, dfmt: v => fmtHM(v), hint: "Trabajo profundo por día" },
+  { k: "offDay", n: "Off-Device Life", f: v => fmtHM(v) + "/d", dir: 0, dfmt: v => fmtHM(v), hint: "Residual no registrado por fuentes" },
+  { k: "workout", n: "Ejercicio", f: v => fmtHM(v) + "/d", dir: 1, dfmt: v => fmtHM(v), hint: "Health & Fitness › Workout" },
+  { k: "family", n: "Tiempo en familia", f: v => fmtHM(v) + "/d", dir: 1, dfmt: v => fmtHM(v), hint: "Family Time Tracking" },
+  { k: "correction", n: "Ajustes manuales", f: v => fmtHM(v), dir: 0, dfmt: v => fmtHM(v), hint: "Minutos añadidos en revisión humana" },
+  { k: "reviewDays", n: "Días en revisión", f: v => fmtN(v), dir: -1, dfmt: v => fmtN(v), hint: "Días fuera de tolerancia" },
+];
+function deltaHtml(def, cur, prev) {
+  if (prev == null || prev[def.k] == null) return `<span class="neutral">sin mes previo</span>`;
+  const dv = cur[def.k] - prev[def.k];
+  if (Math.abs(dv) < 1e-9) return `<span class="neutral">± 0 vs mes previo</span>`;
+  const arrow = dv > 0 ? "▲" : "▼";
+  const cls = def.dir === 0 ? "neutral" : (dv * def.dir > 0 ? "up-good" : "up-bad");
+  return `<span class="${cls}">${arrow} ${dv > 0 ? "+" : "−"}${def.dfmt(Math.abs(dv))}</span> <span class="neutral">vs mes previo</span>`;
+}
+
+/* --------------------------------------------------------------- tooltip */
+const tip = document.getElementById("tip");
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => tip.style.display = "none";
+const tipRows = (title, rows) => `<div class="t">${esc(title)}</div>` + rows.map(r =>
+  `<div class="r"><span>${r.c ? `<i class="sw" style="background:${r.c}"></i> ` : ""}${esc(r.n)}</span><span>${esc(r.v)}</span></div>`).join("");
+function bindTips(root) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.addEventListener("mousemove", ev => showTip(el.dataset.tip, ev));
+    el.addEventListener("mouseleave", hideTip);
+  });
+}
+const attrTip = html => `data-tip="${esc(html)}"`;
+
+/* ---------------------------------------------------------------- charts */
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+}
+function legendHtml(items) {
+  return `<div class="legend">${items.map(i => `<span><i class="sw" style="background:${i.c}"></i>${esc(i.n)}</span>`).join("")}</div>`;
+}
+function roundTop(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+/* Vertical stacked columns. series: [{n, c, v:[...]}]; yFmt formats axis ticks. */
+function stackedColumns(el, { labels, series, height = 280, yFmt = fmtHM, valFmt = fmtHM, yMax, tickStep, tipTitle, totalLabel = "Total" }) {
+  const W = Math.max(320, el.clientWidth || 800), H = height, pl = 46, pr = 8, pt = 10, pb = 26;
+  const totals = labels.map((_, i) => series.reduce((a, s) => a + (s.v[i] || 0), 0));
+  let max = yMax || niceMax(Math.max(...totals, 1));
+  if (tickStep) max = Math.max(tickStep, Math.ceil(Math.max(max, ...totals) / tickStep - 1e-9) * tickStep);
+  const nTicks = tickStep ? Math.round(max / tickStep) : 4;
+  const iw = W - pl - pr, ih = H - pt - pb, band = iw / labels.length;
+  const bw = Math.max(3, Math.min(44, band * 0.68));
+  const y = v => pt + ih - v / max * ih;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img">`;
+  for (let t = 0; t <= nTicks; t++) {
+    const v = max * t / nTicks;
+    svg += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--${t ? "grid" : "axis"})"/>`;
+    svg += `<text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${esc(yFmt(v))}</text>`;
+  }
+  const every = Math.ceil(labels.length / Math.max(1, Math.floor(iw / 42)));
+  labels.forEach((lab, i) => {
+    const cx = pl + band * i + band / 2, x = cx - bw / 2;
+    let acc = 0;
+    const visible = series.map((s, si) => ({ s, si, v: s.v[i] || 0 })).filter(o => o.v > 0);
+    visible.forEach((o, vi) => {
+      const y0 = y(acc), y1 = y(acc + o.v); acc += o.v;
+      const h = Math.max(0, y0 - y1 - (vi ? 2 : 0));
+      if (h <= 0) return;
+      svg += vi === visible.length - 1
+        ? `<path d="${roundTop(x, y1, bw, h, 4)}" fill="${o.s.c}"/>`
+        : `<rect x="${x}" y="${y1}" width="${bw}" height="${h}" fill="${o.s.c}"/>`;
+    });
+    if (i % every === 0) svg += `<text x="${cx}" y="${H - 8}" text-anchor="middle">${esc(lab)}</text>`;
+    const rows = visible.slice().reverse().map(o => ({ c: o.s.c, n: o.s.n, v: valFmt(o.v) }));
+    rows.push({ n: totalLabel, v: valFmt(totals[i]) });
+    svg += `<rect x="${pl + band * i}" y="${pt}" width="${band}" height="${ih}" fill="transparent" ${attrTip(tipRows(tipTitle ? tipTitle(i) : lab, rows))}/>`;
+  });
+  el.innerHTML = svg + "</svg>";
+  bindTips(el);
+}
+/* Line chart with crosshair tooltip. series: [{n, c, v:[...|null]}]; refs: [{v, n}] */
+function lineChart(el, { labels, series, height = 200, yFmt = v => fmtN(v), valFmt, refs = [], yMin = 0, yMax, divider, tipTitle }) {
+  valFmt = valFmt || yFmt;
+  const W = Math.max(280, el.clientWidth || 600), H = height, pl = 46, pr = 12, pt = 12, pb = 26;
+  const all = series.flatMap(s => s.v).filter(v => v != null).concat(refs.map(r => r.v));
+  const max = yMax || niceMax(Math.max(...all, 1) * 1.05);
+  const iw = W - pl - pr, ih = H - pt - pb;
+  const x = i => pl + (labels.length === 1 ? iw / 2 : iw * i / (labels.length - 1));
+  const y = v => pt + ih - (v - yMin) / (max - yMin) * ih;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img">`;
+  for (let t = 0; t <= 4; t++) {
+    const v = yMin + (max - yMin) * t / 4;
+    svg += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--${t ? "grid" : "axis"})"/>`;
+    svg += `<text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${esc(yFmt(v))}</text>`;
+  }
+  if (divider != null && divider > 0) {
+    const dx = (x(divider - 1) + x(divider)) / 2;
+    svg += `<line x1="${dx}" x2="${dx}" y1="${pt}" y2="${pt + ih}" stroke="var(--axis)" stroke-dasharray="3 3"/>`;
+    svg += `<text x="${dx + 4}" y="${pt + 10}">sistema actual →</text>`;
+  }
+  refs.forEach(r => {
+    svg += `<line x1="${pl}" x2="${W - pr}" y1="${y(r.v)}" y2="${y(r.v)}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".6"/>`;
+    svg += `<text x="${pl + 4}" y="${y(r.v) - 4}">${esc(r.n)}</text>`;
+  });
+  const every = Math.ceil(labels.length / Math.max(1, Math.floor(iw / 46)));
+  labels.forEach((l, i) => { if (i % every === 0) svg += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(l)}</text>`; });
+  series.forEach(s => {
+    let d = "", pen = false;
+    s.v.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + x(i) + "," + y(v); pen = true; });
+    svg += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="2" stroke-linejoin="round"/>`;
+    if (labels.length <= 40) s.v.forEach((v, i) => { if (v != null) svg += `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="${s.c}" stroke="var(--surface)" stroke-width="2"/>`; });
+  });
+  const band = labels.length > 1 ? iw / (labels.length - 1) : iw;
+  svg += `<line class="xh" x1="0" x2="0" y1="${pt}" y2="${pt + ih}" stroke="var(--axis)" visibility="hidden"/>`;
+  labels.forEach((l, i) => {
+    const rows = series.map(s => ({ c: s.c, n: s.n, v: s.v[i] == null ? "—" : valFmt(s.v[i]) }));
+    svg += `<rect data-x="${x(i)}" x="${x(i) - band / 2}" y="${pt}" width="${band}" height="${ih}" fill="transparent" ${attrTip(tipRows(tipTitle ? tipTitle(i) : l, rows))}/>`;
+  });
+  el.innerHTML = svg + "</svg>";
+  const xh = el.querySelector(".xh");
+  el.querySelectorAll("rect[data-x]").forEach(r => {
+    r.addEventListener("mouseenter", () => { xh.setAttribute("x1", r.dataset.x); xh.setAttribute("x2", r.dataset.x); xh.setAttribute("visibility", "visible"); });
+    r.addEventListener("mouseleave", () => xh.setAttribute("visibility", "hidden"));
+  });
+  bindTips(el);
+}
+/* Horizontal bars (HTML). rows: [{n, v, c, label, tip}] */
+function hbars(rows, { max } = {}) {
+  max = max || Math.max(...rows.map(r => r.v), 1);
+  return `<div class="hbars">${rows.map(r => `
+    <div class="hbar" ${attrTip(r.tip || tipRows(r.n, [{ n: "Valor", v: r.label }]))}>
+      <div class="name" title="${esc(r.n)}">${esc(r.n)}</div>
+      <div class="track"><div class="fill" style="width:${Math.max(0.5, r.v / max * 100)}%;background:${r.c || "var(--s1)"}"></div></div>
+      <div class="val">${r.label}</div>
+    </div>`).join("")}</div>`;
+}
+/* Diverging bars around zero (HTML). rows: [{n, v, label, good}] */
+function divBars(rows) {
+  const max = Math.max(...rows.map(r => Math.abs(r.v)), 1);
+  return `<div class="hbars">${rows.map(r => {
+    const w = Math.abs(r.v) / max * 50;
+    const pos = r.v >= 0;
+    return `<div class="hbar" ${attrTip(r.tip || tipRows(r.n, [{ n: "Δ", v: r.label }]))}>
+      <div class="name" title="${esc(r.n)}">${esc(r.n)}</div>
+      <div class="div-track"><div class="mid"></div><div class="fill" style="${pos ? "left:50%" : `left:${50 - w}%`};width:${Math.max(0.4, w)}%;background:var(${pos ? "--div-pos" : "--div-neg"});border-radius:${pos ? "0 4px 4px 0" : "4px 0 0 4px"}"></div></div>
+      <div class="val ${r.cls || ""}">${r.label}</div></div>`;
+  }).join("")}</div>`;
+}
+/* 100% stacked bar for one breakdown. */
+function stack100(title, dim, t, total) {
+  const vals = Object.keys(t).filter(k => t[k] > 0);
+  const ord = (ORDER[dim] || []).filter(v => vals.includes(v)).concat(vals.filter(v => !(ORDER[dim] || []).includes(v)));
+  const segs = ord.map(v => ({ n: v, v: t[v], c: colorOf(dim, v) }));
+  return `<div class="s100-row"><div class="lab"><span>${esc(title)}</span></div>
+    <div class="stack100">${segs.map(s => `<div style="flex:${s.v};background:${s.c}" ${attrTip(tipRows(s.n, [{ n: "Tiempo", v: fmtH(s.v) }, { n: "Participación", v: fmtPct(s.v / total * 100) }]))}></div>`).join("")}</div>
+    ${legendHtml(segs.map(s => ({ c: s.c, n: `${s.n} ${fmtPct(s.v / total * 100, 0)}` })))}</div>`;
+}
+/* Heat table: rows x cols with sequential single-hue fill. */
+function heatTable(rowKeys, colKeys, cell, { rowHead = "", fmt = v => fmtHM(v), colFmt = c => c, max } = {}) {
+  let mx = max || 0;
+  if (!max) rowKeys.forEach(r => colKeys.forEach(c => mx = Math.max(mx, cell(r, c) || 0)));
+  const rgb = cssVar("--heat-rgb") || "42,120,214";
+  const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  return `<div class="scroll"><table><thead><tr><th>${esc(rowHead)}</th>${colKeys.map(c => `<th class="n">${esc(colFmt(c))}</th>`).join("")}</tr></thead><tbody>
+    ${rowKeys.map(r => `<tr><td>${esc(r)}</td>${colKeys.map(c => {
+      const v = cell(r, c); const a = v ? Math.min(1, v / mx) : 0;
+      const ink = a > 0.55 ? "#fff" : "var(--ink)";
+      return `<td class="n" style="background:rgba(${rgb},${(a * 0.9).toFixed(3)});color:${ink}">${v ? fmt(v) : (dark ? "·" : "·")}</td>`;
+    }).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function segButtons(id, options, current) {
+  return `<div class="seg" id="${id}">${options.map(o => `<button data-v="${o}" class="${o === current ? "on" : ""}">${esc(LABEL_ES[o] || o)}</button>`).join("")}</div>`;
+}
+function bindSeg(id, fn) {
+  document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener("click", () => fn(b.dataset.v)));
+}
+function table(headers, rows, numCols = []) {
+  return `<div class="scroll"><table><thead><tr>${headers.map((h, i) => `<th class="${numCols.includes(i) ? "n" : ""}">${esc(h)}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${numCols.includes(i) ? "n" : ""}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function statusBadge(status) {
+  const s = (status || "").toUpperCase();
+  const [c, icon] = s.startsWith("CLOSED WITH") ? ["var(--warn)", "◐"] : s.startsWith("CLOSED") ? ["var(--good)", "✓"]
+    : s.includes("INTERINO") || s.includes("SIN CHECKLIST") ? ["var(--warn)", "…"] : ["var(--bad)", "!"];
+  return `<span class="badge"><i class="dot" style="background:${c}"></i>${icon} ${esc(status || "—")}</span>`;
+}
+function reconBadge(st) {
+  const c = st === "NORMAL_TOLERANCE" ? "var(--good)" : st.includes("REVIEW") ? "var(--warn)" : "var(--bad)";
+  const l = st === "NORMAL_TOLERANCE" ? "✓ normal" : st.includes("REVIEW") ? "◐ revisión" : "! " + st.toLowerCase();
+  return `<span class="badge"><i class="dot" style="background:${c}"></i>${esc(l)}</span>`;
+}
+
+/* -------------------------------------------------------------- overview */
+function renderOverview() {
+  const m = BY_KEY[S.month], p = prevOf(m), k = kpis(m), kp = p ? kpis(p) : null;
+  const el = document.getElementById("tab-overview");
+  const goal = agg(m.rows, "Goal"), energy = agg(m.rows, "Energy"), domain = agg(m.rows, "Domain");
+  const cat = agg(m.rows, "Category"), catP = p ? agg(p.rows, "Category") : {};
+  const dev = agg(m.rows, "Device");
+  const catRows = Object.keys(cat).sort((a, b) => cat[b] - cat[a]).map(c => {
+    const pd = cat[c] / m.days, pp = p ? (catP[c] || 0) / p.days : null;
+    const delta = pp == null ? "" : ` <span class="neutral">(${sgn(pd - pp, fmtHM)})</span>`;
+    return { n: c, v: cat[c], c: colorOf("Category", c), label: `${fmtHM(pd)}/d · ${fmtPct(cat[c] / k.total * 100)}${delta}`,
+      tip: tipRows(c, [{ n: "Total", v: fmtH(cat[c]) }, { n: "Por día", v: fmtHM(pd) }, { n: "Participación", v: fmtPct(cat[c] / k.total * 100) }, { n: "Mes previo/día", v: pp == null ? "—" : fmtHM(pp) }]) };
+  });
+  const devRows = Object.keys(dev).sort((a, b) => dev[b] - dev[a]).map(d => ({ n: d, v: dev[d], c: colorOf("Device", d), label: `${fmtH(dev[d])} · ${fmtPct(dev[d] / k.total * 100)}` }));
+  el.innerHTML = `
+    <div class="statusbar">
+      <strong style="color:var(--ink);font-size:15px">${esc(monthLong(m.key))}</strong>
+      ${statusBadge(m.status)}
+      <span>${m.start} → ${m.end} · ${m.days} días${m.full_month ? "" : ` de ${m.month_days}`}</span>
+      ${m.validator ? `<span>Validador: ${esc(m.validator)} checks</span>` : ""}
+      ${m.closed_on ? `<span>Cerrado: ${esc(m.closed_on)}</span>` : ""}
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="k">Capacidad del reloj</div><div class="v">${fmtN(k.capacity / 60)} h</div>
+        <div class="d">Único registrado ${fmtH(k.unique)} · Off-Device ${fmtH(k.off)}</div></div>
+      ${KPI_DEFS.map(d => `<div class="tile" title="${esc(d.hint)}"><div class="k">${esc(d.n)}</div><div class="v">${d.f(k[d.k])}</div><div class="d">${deltaHtml(d, k, kp)}</div></div>`).join("")}
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>¿En qué se fue el tiempo?</h2><p class="hint">Participación del tiempo analítico del mes (${fmtH(k.total)})</p>
+        ${stack100("Objetivo (Goal)", "Goal", goal, k.total)}
+        ${stack100("Energía", "Energy", energy, k.total)}
+        ${stack100("Dominio", "Domain", domain, k.total)}
+        <div class="note">Inversión ${fmtHM(k.inv)}/d · Mantenimiento ${fmtHM(k.mai)}/d · Consumo ${fmtHM(k.con)}/d · Recuperación ${fmtHM(k.recovery)}/d</div>
+      </div>
+      <div class="card"><h2>Categorías</h2><p class="hint">Minutos por día y participación; entre paréntesis, cambio vs mes previo</p>${hbars(catRows)}</div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Por dispositivo / fuente</h2><p class="hint">Habit = registro manual; Off-Device = residual del día</p>${hbars(devRows)}</div>
+      <div class="card"><h2>Lo que merece atención</h2><p class="hint">Del Standard Report del período</p>
+        ${m.attention && m.attention.length ? `<ul class="notes">${m.attention.map(a => `<li>${esc(a)}</li>`).join("")}</ul>` : `<div class="empty">Sin Standard Report para este período.</div>`}
+      </div>
+    </div>`;
+  bindTips(el);
+}
+
+/* --------------------------------------------------------------- history */
+const H = D.historical;
+const FINAL_KEYS = new Set(MONTHS.map(m => m.key));
+const HIST_MONTHS = (() => {
+  const s = new Set(MONTHS.map(m => m.key));
+  if (H) H.trends.forEach(t => s.add(t[0]));
+  return [...s].sort();
+})();
+const histRegime = k => FINAL_KEYS.has(k) ? "Sistema actual (Final conciliado)" : ((H && (H.trends.find(t => t[0] === k) || [])[1]) || "");
+const TREND_IDX = {};
+if (H) H.trends.forEach(t => { TREND_IDX[`${t[0]}|${t[2]}|${t[3]}`] = t[4]; });
+const hv = (k, dim, metric) => TREND_IDX[`${k}|${dim}|${metric}`];
+/* min/day for (month, Dimension, value). Finals computed from fact; legacy from annual trends. */
+function histMinDay(k, dim, value) {
+  if (FINAL_KEYS.has(k)) { const m = BY_KEY[k]; return sum(m.rows, r => r[dim] === value) / m.days; }
+  const v = hv(k, dim.toLowerCase(), value);
+  return v == null ? null : v;
+}
+function histValues(k, dim) {
+  if (FINAL_KEYS.has(k)) { const m = BY_KEY[k]; const t = agg(m.rows, dim); Object.keys(t).forEach(x => t[x] /= m.days); return t; }
+  const out = {}; if (H) H.trends.forEach(t => { if (t[0] === k && t[2] === dim.toLowerCase() && t[4] > 0) out[t[3]] = t[4]; });
+  return out;
+}
+const HIST_KPIS = [
+  { n: "Sueño (h/noche)", fmt: v => fmtN(v, 2) + " h", refs: [{ v: 7.5, n: "piso 7,5 h" }],
+    f: k => FINAL_KEYS.has(k) ? kpis(BY_KEY[k]).sleepH : (hv(k, "anchor", "SLEEP") ?? null) / 60 || null },
+  { n: "Ratio de inversión (%)", fmt: v => fmtPct(v),
+    f: k => { if (FINAL_KEYS.has(k)) return kpis(BY_KEY[k]).invRatio;
+      const i = hv(k, "goal", "Investment"), m = hv(k, "goal", "Maintenance"), c = hv(k, "goal", "Consumption");
+      return i == null ? null : i / ((i + m + c) || 1) * 100; } },
+  { n: "Consumo discrecional (min/día)", fmt: fmtHM,
+    f: k => FINAL_KEYS.has(k) ? kpis(BY_KEY[k]).disc : (hv(k, "line", "DISCRETIONARY_CONSUMPTION") ?? null) },
+  { n: "Off-Device Life (min/día)", fmt: fmtHM,
+    f: k => FINAL_KEYS.has(k) ? kpis(BY_KEY[k]).offDay : (hv(k, "category", "Off-Device Life") ?? null) },
+  { n: "Ejercicio (min/día)", fmt: fmtHM,
+    f: k => FINAL_KEYS.has(k) ? kpis(BY_KEY[k]).workout : (hv(k, "anchor", "WORKOUT") ?? null) },
+  { n: "Familia (min/día)", fmt: fmtHM,
+    f: k => FINAL_KEYS.has(k) ? kpis(BY_KEY[k]).family : (hv(k, "anchor", "FAMILY_TIME") ?? null) },
+];
+function renderHistory() {
+  const el = document.getElementById("tab-history");
+  const ks = HIST_MONTHS, firstFinal = ks.findIndex(k => FINAL_KEYS.has(k));
+  const dim = S.histDim;
+  const perMonth = ks.map(k => histValues(k, dim));
+  const allVals = [...new Set(perMonth.flatMap(o => Object.keys(o)))];
+  const { keep, rest } = foldSeries(dim, allVals.filter(v => v !== "(Unmapped legacy)"));
+  const series = keep.map(v => ({ n: v, c: colorOf(dim, v), v: perMonth.map(o => o[v] || 0) }));
+  if (rest.length) series.push({ n: "Otras", c: "var(--other)", v: perMonth.map(o => rest.reduce((a, r) => a + (o[r] || 0), 0)) });
+  if (allVals.includes("(Unmapped legacy)")) series.push({ n: "Sin mapear (legacy)", c: "var(--grid)", v: perMonth.map(o => o["(Unmapped legacy)"] || 0) });
+
+  const catAll = ORDER.Category.slice();
+  if (H) H.trends.forEach(t => { if (t[2] === "category" && !catAll.includes(t[3])) catAll.push(t[3]); });
+
+  const accRows = ks.map(k => {
+    if (FINAL_KEYS.has(k)) { const m = BY_KEY[k], x = kpis(m);
+      return [esc(monthShort(k)), "Actual", fmtN(x.capacity / 60), fmtN(x.unique / 60, 1), fmtN(x.off / 60, 1), fmtPct(x.coverage), fmtN(x.reviewDays), esc(m.status)]; }
+    const a = H && H.accounting.find(r => r.month === k);
+    return a ? [esc(monthShort(k)), a.regime.startsWith("LEGACY") ? "Legacy" : "Transición", fmtN(a.capacity_h), fmtN(a.unique_h, 1), fmtN(a.off_device_h, 1), fmtPct(a.coverage_pct), fmtN(a.review_days), esc(a.methodology.split("—")[0].trim())]
+      : [esc(monthShort(k)), "", "", "", "", "", "", ""];
+  });
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><div><h2>Distribución diaria promedio por mes</h2>
+        <p class="hint">Minutos por día (24 h = 1.440 min). ${H ? `Meses legacy desde ${esc(H.folder)}; ` : ""}meses del sistema actual desde el Final conciliado.</p></div>
+        ${segButtons("histSeg", ["Goal", "Energy", "Domain", "Category", "Device"], dim)}</div>
+      ${legendHtml(series.map(s => ({ c: s.c, n: s.n })))}
+      <div class="chart" id="histChart"></div>
+      <div class="note">Los meses legacy (registro manual) son comparables con salvedades a nivel de bloque; "Sin mapear (legacy)" es tiempo legacy sin equivalente en la taxonomía actual. ${dim === "Device" ? "Dispositivo solo existe para meses del sistema actual." : ""}</div>
+    </div>
+    <div class="section-title">Indicadores clave en el tiempo</div>
+    <div class="grid g3">${HIST_KPIS.map((_, i) => `<div class="card"><h2>${esc(HIST_KPIS[i].n)}</h2><div class="chart" id="hk${i}"></div></div>`).join("")}</div>
+    <div class="section-title">Mapa de calor: categoría × mes (min/día)</div>
+    <div class="card">${heatTable(catAll, ks, (r, c) => histMinDay(c, "Category", r), { rowHead: "Categoría", colFmt: monthShort })}</div>
+    <div class="section-title">Contabilidad del universo de tiempo por mes</div>
+    <div class="card">${table(["Mes", "Régimen", "Capacidad h", "Único registrado h", "Off-Device h", "Cobertura", "Días revisión", "Estado / metodología"], accRows, [2, 3, 4, 5, 6])}</div>`;
+  stackedColumns(document.getElementById("histChart"), {
+    labels: ks.map(monthShort), series, yMax: 1440, tickStep: 240,
+    yFmt: v => fmtN(v / 60) + "h", tipTitle: i => `${monthLong(ks[i])} · ${histRegime(ks[i])}`, totalLabel: "Total/día" });
+  HIST_KPIS.forEach((def, i) => lineChart(document.getElementById("hk" + i), {
+    labels: ks.map(monthShort), series: [{ n: def.n, c: "var(--s1)", v: ks.map(k => { const v = def.f(k); return v == null || isNaN(v) ? null : v; }) }],
+    yFmt: def.fmt, refs: def.refs || [], divider: firstFinal, height: 190, tipTitle: j => monthLong(ks[j]) }));
+  bindSeg("histSeg", v => { S.histDim = v; renderHistory(); });
+  bindTips(el);
+}
+
+/* -------------------------------------------------------------- taxonomy */
+function renderTaxonomy() {
+  const m = BY_KEY[S.month], p = prevOf(m);
+  const el = document.getElementById("tab-taxonomy");
+  const F = S.taxF;
+  const pass = r => ["Device", "Goal", "Energy", "Domain"].every(d => !F[d] || r[d] === F[d]);
+  const rows = m.rows.filter(pass), prows = p ? p.rows.filter(pass) : [];
+  const total = sum(m.rows), ftotal = sum(rows);
+  const opts = d => [...new Set(m.rows.map(r => r[d]))].sort();
+
+  const cat = agg(rows, "Category"), catP = agg(prows, "Category");
+  const cats = Object.keys(cat).sort((a, b) => cat[b] - cat[a]);
+  let body = "";
+  cats.forEach((c, ci) => {
+    const subRows = rows.filter(r => r.Category === c);
+    const sub = agg(subRows, "Subcategory"), subP = agg(prows.filter(r => r.Category === c), "Subcategory");
+    const dP = p ? cat[c] / m.days - (catP[c] || 0) / p.days : null;
+    body += `<tr class="cat-row" data-c="${ci}"><td><span class="caret">▸</span><i class="sw" style="background:${colorOf("Category", c)}"></i> ${esc(c)}</td>
+      <td class="n">${fmtH(cat[c])}</td><td class="n">${fmtHM(cat[c] / m.days)}</td><td class="n">${fmtPct(cat[c] / total * 100)}</td>
+      <td class="n">${dP == null ? "—" : sgn(dP, fmtHM)}</td><td></td></tr>`;
+    Object.keys(sub).sort((a, b) => sub[b] - sub[a]).forEach(s => {
+      const sr = subRows.filter(r => r.Subcategory === s);
+      const tags = ["Domain", "Energy", "Goal"].map(d => { const t = agg(sr, d); return Object.keys(t).sort((a, b) => t[b] - t[a]).map(v => `<span class="tag">${esc(v)}</span>`).join(""); }).join(" ");
+      const devs = Object.keys(agg(sr, "Device")).join(", ");
+      const dS = p ? sub[s] / m.days - (subP[s] || 0) / p.days : null;
+      body += `<tr class="sub-row hidden" data-p="${ci}"><td title="${esc(devs)}">${esc(s)}</td><td class="n">${fmtH(sub[s])}</td>
+        <td class="n">${fmtHM(sub[s] / m.days)}</td><td class="n">${fmtPct(sub[s] / total * 100)}</td><td class="n">${dS == null ? "—" : sgn(dS, fmtHM)}</td><td>${tags}</td></tr>`;
+    });
+  });
+
+  const act = agg(rows, "Activity");
+  const actRows = Object.keys(act).sort((a, b) => act[b] - act[a]).slice(0, 15).map(a => {
+    const c = (rows.find(r => r.Activity === a) || {}).Category;
+    return { n: a, v: act[a], c: colorOf("Category", c), label: `${fmtH(act[a])} · ${fmtHM(act[a] / m.days)}/d`,
+      tip: tipRows(a, [{ n: "Categoría", v: c }, { n: "Total", v: fmtH(act[a]) }, { n: "Por día", v: fmtHM(act[a] / m.days) }]) };
+  });
+  const cellMD = (d1, d2) => (a, b) => sum(rows, r => r[d1] === a && r[d2] === b) / m.days;
+  const keysOf = d => (ORDER[d] || []).filter(v => rows.some(r => r[d] === v)).concat([...new Set(rows.map(r => r[d]))].filter(v => !(ORDER[d] || []).includes(v)));
+
+  el.innerHTML = `
+    <div class="filters">${["Device", "Domain", "Energy", "Goal"].map(d => `<label>${LABEL_ES[d]}
+      <select data-f="${d}"><option value="">Todos</option>${opts(d).map(o => `<option ${F[d] === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`).join("")}
+      <span class="sub">${Object.values(F).some(Boolean) ? `Filtrado: ${fmtH(ftotal)} de ${fmtH(total)}` : `Total: ${fmtH(total)} · ${monthLong(m.key)}`}</span>
+      <button id="expandAll">Expandir todo</button></div>
+    <div class="card"><h2>Árbol de taxonomía: Categoría → Subcategoría</h2>
+      <p class="hint">Clic en una categoría para ver sus subcategorías. Etiquetas = Dominio · Energía · Objetivo. Δ = cambio en min/día vs ${p ? monthLong(p.key) : "—"}. Participación sobre el total del mes.</p>
+      <div class="scroll" style="max-height:640px"><table><thead><tr><th>Categoría / Subcategoría</th><th class="n">Total</th><th class="n">Por día</th><th class="n">Part.</th><th class="n">Δ/día</th><th>Dominio · Energía · Objetivo</th></tr></thead><tbody>${body}</tbody></table></div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Dominio × Objetivo</h2><p class="hint">Minutos por día</p>${heatTable(keysOf("Domain"), keysOf("Goal"), cellMD("Domain", "Goal"), { rowHead: "Dominio" })}</div>
+      <div class="card"><h2>Dominio × Energía</h2><p class="hint">Minutos por día</p>${heatTable(keysOf("Domain"), keysOf("Energy"), cellMD("Domain", "Energy"), { rowHead: "Dominio" })}</div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Categoría × Dispositivo</h2><p class="hint">Minutos por día</p>${heatTable(keysOf("Category"), keysOf("Device"), cellMD("Category", "Device"), { rowHead: "Categoría" })}</div>
+      <div class="card"><h2>Top 15 actividades</h2><p class="hint">Nivel más fino del Final (Activity)</p>${hbars(actRows)}</div>
+    </div>`;
+  el.querySelectorAll("select[data-f]").forEach(s => s.addEventListener("change", () => { S.taxF[s.dataset.f] = s.value; renderTaxonomy(); }));
+  el.querySelectorAll("tr.cat-row").forEach(tr => tr.addEventListener("click", () => {
+    const open = tr.querySelector(".caret").textContent === "▸";
+    tr.querySelector(".caret").textContent = open ? "▾" : "▸";
+    el.querySelectorAll(`tr.sub-row[data-p="${tr.dataset.c}"]`).forEach(r => r.classList.toggle("hidden", !open));
+  }));
+  document.getElementById("expandAll").addEventListener("click", () => {
+    el.querySelectorAll("tr.sub-row").forEach(r => r.classList.remove("hidden"));
+    el.querySelectorAll(".caret").forEach(c => c.textContent = "▾");
+  });
+  bindTips(el);
+}
+
+/* ----------------------------------------------------------------- daily */
+function dateOf(m, d) { return m.key + "-" + String(d).padStart(2, "0"); }
+function dow(m, d) { return new Date(Date.UTC(+m.key.slice(0, 4), +m.key.slice(5, 7) - 1, d)).getUTCDay(); }
+function renderDaily() {
+  const m = BY_KEY[S.month], dim = S.dailyDim;
+  const el = document.getElementById("tab-daily");
+  const days = Array.from({ length: m.days }, (_, i) => i + 1);
+  const vals = [...new Set(m.rows.map(r => r[dim]))];
+  const { keep, rest } = foldSeries(dim, vals);
+  const byDay = days.map(d => agg(m.rows.filter(r => r.d === d), dim));
+  const series = keep.map(v => ({ n: v, c: colorOf(dim, v), v: byDay.map(o => o[v] || 0) }));
+  if (rest.length) series.push({ n: "Otras", c: "var(--other)", v: byDay.map(o => rest.reduce((a, r) => a + (o[r] || 0), 0)) });
+
+  const sleep = days.map(d => sum(m.rows, r => r.d === d && isSleep(r)) / 60);
+  const deep = days.map(d => sum(m.rows, r => r.d === d && r.Energy === "Deep") / 60);
+  const disc = days.map(d => sum(m.rows, r => r.d === d && isDisc(r)) / 60);
+
+  const wk = { lab: "Lun–Vie", ds: days.filter(d => ![0, 6].includes(dow(m, d))) }, we = { lab: "Sáb–Dom", ds: days.filter(d => [0, 6].includes(dow(m, d))) };
+  const profDim = ["Goal", "Energy"].includes(dim) ? dim : "Goal";
+  const profVals = (ORDER[profDim] || []).filter(v => vals.length && m.rows.some(r => r[profDim] === v));
+  const prof = profVals.map(v => {
+    const a = sum(m.rows, r => r[profDim] === v && wk.ds.includes(r.d)) / (wk.ds.length || 1);
+    const b = sum(m.rows, r => r[profDim] === v && we.ds.includes(r.d)) / (we.ds.length || 1);
+    return [`<i class="sw" style="background:${colorOf(profDim, v)}"></i> ${esc(v)}`, fmtHM(a), fmtHM(b), sgn(b - a, fmtHM)];
+  });
+
+  const recRows = (m.recon || []).map(r => [`${dateOf(m, r[0])} <span class="sub">${DOW[dow(m, r[0])]}</span>`,
+    fmtHM(r[1]), fmtHM(r[2]), r[3] ? "+" + fmtHM(r[3]) : "—", fmtHM(r[5]), reconBadge(r[7])]);
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><div><h2>Composición de cada día — ${esc(monthLong(m.key))}</h2><p class="hint">Minutos por día; cada columna suma 24 h (incluye Off-Device Life) más el solapamiento registrado, si lo hay</p></div>
+        ${segButtons("daySeg", ["Goal", "Energy", "Domain", "Category", "Device"], dim)}</div>
+      ${legendHtml(series.map(s => ({ c: s.c, n: s.n })))}
+      <div class="chart" id="dayChart"></div>
+    </div>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card"><h2>Sueño por noche</h2><p class="hint">Horas · piso 7,5 h</p><div class="chart" id="dSleep"></div></div>
+      <div class="card"><h2>Energía Deep por día</h2><p class="hint">Horas</p><div class="chart" id="dDeep"></div></div>
+      <div class="card"><h2>Consumo discrecional por día</h2><p class="hint">Horas</p><div class="chart" id="dDisc"></div></div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Entre semana vs fin de semana</h2><p class="hint">Promedio min/día por ${esc(LABEL_ES[profDim])} (${wk.ds.length} días hábiles · ${we.ds.length} de fin de semana)</p>
+        ${table([LABEL_ES[profDim], wk.lab, we.lab, "Δ fin de semana"], prof, [1, 2, 3])}</div>
+      <div class="card"><h2>Conciliación diaria</h2><p class="hint">Registrado original → corregido, ajuste manual, residual Off-Device y estado de tolerancia</p>
+        ${recRows.length ? table(["Fecha", "Original", "Corregido", "Ajuste", "Off-Device", "Estado"], recRows, [1, 2, 3, 4]) : `<div class="empty">Sin conciliación diaria.</div>`}</div>
+    </div>`;
+  const tt = i => `${dateOf(m, days[i])} (${DOW[dow(m, days[i])]})`;
+  stackedColumns(document.getElementById("dayChart"), { labels: days.map(String), series, yMax: 1440, tickStep: 240, yFmt: v => fmtN(v / 60) + "h", tipTitle: tt, height: 300 });
+  const hf = v => fmtN(v, 1) + "h";
+  lineChart(document.getElementById("dSleep"), { labels: days.map(String), series: [{ n: "Sueño", c: "var(--s3)", v: sleep }], refs: [{ v: 7.5, n: "7,5 h" }], yFmt: hf, height: 180, tipTitle: tt });
+  lineChart(document.getElementById("dDeep"), { labels: days.map(String), series: [{ n: "Deep", c: "var(--s1)", v: deep }], yFmt: hf, height: 180, tipTitle: tt });
+  lineChart(document.getElementById("dDisc"), { labels: days.map(String), series: [{ n: "Discrecional", c: "var(--s2)", v: disc }], yFmt: hf, height: 180, tipTitle: tt });
+  bindSeg("daySeg", v => { S.dailyDim = v; renderDaily(); });
+  bindTips(el);
+}
+
+/* --------------------------------------------------------------- compare */
+function renderCompare() {
+  const el = document.getElementById("tab-compare");
+  const cur = BY_KEY[S.month];
+  if (!S.cmpB || !BY_KEY[S.cmpB]) S.cmpB = cur.key;
+  if (!S.cmpA || !BY_KEY[S.cmpA]) S.cmpA = (prevOf(BY_KEY[S.cmpB]) || BY_KEY[S.cmpB]).key;
+  const A = BY_KEY[S.cmpA], B = BY_KEY[S.cmpB], dim = S.cmpDim;
+  const ta = agg(A.rows, dim), tb = agg(B.rows, dim), TA = sum(A.rows), TB = sum(B.rows);
+  const keys = [...new Set([...Object.keys(ta), ...Object.keys(tb)])];
+  const rows = keys.map(k => {
+    const a = (ta[k] || 0) / A.days, b = (tb[k] || 0) / B.days;
+    return { k, a, b, d: b - a, sa: (ta[k] || 0) / TA * 100, sb: (tb[k] || 0) / TB * 100 };
+  }).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  const top = rows.slice(0, 20);
+  const goodDir = k => dim === "Goal" ? ({ Investment: 1, Consumption: -1 }[k] || 0) : 0;
+
+  const allK = MONTHS.map(kpis);
+  const kpiRows = [{ n: "Capacidad (h)", f: x => fmtN(x.capacity / 60) }, { n: "Único registrado (h)", f: x => fmtN(x.unique / 60, 1) },
+    { n: "Off-Device (h)", f: x => fmtN(x.off / 60, 1) },
+    ...KPI_DEFS.map(d => ({ n: d.n, f: x => d.f(x[d.k]) })),
+    { n: "Inversión (min/día)", f: x => fmtHM(x.inv) }, { n: "Mantenimiento (min/día)", f: x => fmtHM(x.mai) },
+    { n: "Consumo (min/día)", f: x => fmtHM(x.con) }, { n: "Recuperación (min/día)", f: x => fmtHM(x.recovery) },
+    { n: "Lectura/journaling (min/día)", f: x => fmtHM(x.reading) }];
+  const monthOpts = sel => MONTHS.map(m => `<option value="${m.key}" ${m.key === sel ? "selected" : ""}>${esc(monthLong(m.key))}</option>`).join("");
+
+  el.innerHTML = `
+    <div class="card"><h2>Matriz de KPIs por mes</h2><p class="hint">Todos los meses del sistema actual (Final conciliado)</p>
+      ${table(["KPI", ...MONTHS.map(m => monthShort(m.key) + (m.full_month ? "" : "*"))], kpiRows.map(r => [esc(r.n), ...allK.map(r.f)]), MONTHS.map((_, i) => i + 1))}
+      ${MONTHS.some(m => !m.full_month) ? `<div class="note">* mes interino / parcial</div>` : ""}</div>
+    <div class="section-title">Comparativo entre dos meses</div>
+    <div class="filters"><label>Mes A <select id="cmpA">${monthOpts(S.cmpA)}</select></label>
+      <label>Mes B <select id="cmpB">${monthOpts(S.cmpB)}</select></label>
+      ${segButtons("cmpSeg", ["Goal", "Energy", "Domain", "Category", "Subcategory", "Device", "Activity"], dim)}</div>
+    <div class="grid g2">
+      <div class="card"><h2>Mayores cambios: ${esc(LABEL_ES[dim])}</h2><p class="hint">Δ min/día de ${esc(monthShort(A.key))} a ${esc(monthShort(B.key))} (normalizado por días del mes) · top 20 por magnitud</p>
+        ${divBars(top.map(r => { const g = goodDir(r.k); return { n: r.k, v: r.d, label: sgn(r.d, fmtHM), cls: g ? (r.d * g > 0 ? "up-good" : "up-bad") : "",
+          tip: tipRows(r.k, [{ n: monthShort(A.key), v: fmtHM(r.a) + "/d" }, { n: monthShort(B.key), v: fmtHM(r.b) + "/d" }, { n: "Δ", v: sgn(r.d, fmtHM) }, { n: "Δ participación", v: sgn(r.sb - r.sa, v => fmtN(v, 1) + " pp") }]) }; }))}</div>
+      <div class="card"><h2>Detalle</h2><p class="hint">min/día y participación de cada mes</p>
+        ${table([LABEL_ES[dim], monthShort(A.key), monthShort(B.key), "Δ/día", "Part. A", "Part. B", "Δ pp"],
+          rows.map(r => [esc(r.k), fmtHM(r.a), fmtHM(r.b), sgn(r.d, fmtHM), fmtPct(r.sa), fmtPct(r.sb), sgn(r.sb - r.sa, v => fmtN(v, 1))]), [1, 2, 3, 4, 5, 6])}</div>
+    </div>`;
+  document.getElementById("cmpA").addEventListener("change", e => { S.cmpA = e.target.value; renderCompare(); });
+  document.getElementById("cmpB").addEventListener("change", e => { S.cmpB = e.target.value; renderCompare(); });
+  bindSeg("cmpSeg", v => { S.cmpDim = v; renderCompare(); });
+  bindTips(el);
+}
+
+/* ---------------------------------------------------------------- budget */
+const B = D.budget;
+const dnum = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5;
+const dstr = n => new Date(n * 864e5).toISOString().slice(0, 10);
+function phaseDays(start, end) {
+  const out = {}; if (!B) return out;
+  B.phases.forEach(p => { const a = Math.max(dnum(start), dnum(p.start)), b = Math.min(dnum(end), dnum(p.end)); if (b >= a) out[p.phase] = b - a + 1; });
+  return out;
+}
+const leafKey = (d, c, s) => `${d}|${c}|${s}`;
+/* Budget minutes per leaf for a phase->days map. */
+function budgetLeaves(pd) {
+  const out = {};
+  B.leaf.forEach(([dev, cat, sub, dom, en, goal, ph, hpw]) => {
+    if (!pd[ph]) return;
+    const k = leafKey(dev, cat, sub);
+    out[k] = out[k] || { Device: dev, Category: cat, Subcategory: sub, Domain: dom, Energy: en, Goal: goal, min: 0 };
+    out[k].min += hpw * 60 * pd[ph] / 7;
+  });
+  return out;
+}
+function budgetLines(pd) {
+  const lines = {}, leafTot = {};
+  B.lines.forEach(([line, cls, comp, dev, cat, sub, goal, ph, hpw]) => {
+    if (!pd[ph]) return;
+    const k = leafKey(dev, cat, sub), v = hpw * 60 * pd[ph] / 7;
+    lines[line] = lines[line] || { line, cls, min: 0, leaves: {} };
+    lines[line].min += v; lines[line].leaves[k] = (lines[line].leaves[k] || 0) + v;
+    leafTot[k] = (leafTot[k] || 0) + v;
+  });
+  return { lines, leafTot };
+}
+const ASSESS = (goal, varPerDay) => {
+  if (Math.abs(varPerDay) < 5) return ["En línea", "neutral"];
+  if (goal === "Investment") return varPerDay > 0 ? ["Favorable", "up-good"] : ["Desfavorable", "up-bad"];
+  if (goal === "Consumption") return varPerDay < 0 ? ["Favorable", "up-good"] : ["Desfavorable", "up-bad"];
+  return ["No se juzga", "neutral"];
+};
+function renderBudget() {
+  const el = document.getElementById("tab-budget");
+  if (!B) { el.innerHTML = `<div class="card"><div class="empty">No hay snapshot de presupuesto en output/Reference/Budget.</div></div>`; return; }
+  const m = BY_KEY[S.month];
+  const hz = B.horizon || {};
+  const covStart = dstr(Math.max(dnum(m.start), dnum(hz.start || m.start))), covEnd = dstr(Math.min(dnum(m.end), dnum(hz.end || m.end)));
+  const covered = dnum(covEnd) >= dnum(covStart) ? dnum(covEnd) - dnum(covStart) + 1 : 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const curPhase = (B.phases.find(p => today >= p.start && today <= p.end) || B.phases[0]).phase;
+  if (!S.budgetPhase) S.budgetPhase = curPhase;
+  const official = m.official_budget;
+
+  // Comparison basis.
+  let pd, actualRows, aDays, bDays, mode;
+  if (covered > 0) {
+    pd = phaseDays(covStart, covEnd); aDays = bDays = covered; mode = "covered";
+    const d0 = +covStart.slice(8, 10), d1 = +covEnd.slice(8, 10);
+    actualRows = m.rows.filter(r => r.d >= d0 && r.d <= d1);
+  } else {
+    pd = { [S.budgetPhase]: 7 }; bDays = 7; aDays = m.days; mode = "reference"; actualRows = m.rows;
+  }
+  const bl = budgetLeaves(pd);
+  const act = {};
+  actualRows.forEach(r => { const k = leafKey(r.Device, r.Category, r.Subcategory); act[k] = act[k] || { Device: r.Device, Category: r.Category, Subcategory: r.Subcategory, Goal: r.Goal, min: 0 }; act[k].min += r.min; });
+  const leaves = [...new Set([...Object.keys(bl), ...Object.keys(act)])].map(k => {
+    const b = bl[k], a = act[k];
+    const base = b || a;
+    const ad = (a ? a.min : 0) / aDays, bd = (b ? b.min : 0) / bDays;
+    const status = b && a ? "Comparado" : b ? "No registrado" : "Sin presupuesto";
+    return { k, Device: base.Device, Category: base.Category, Subcategory: base.Subcategory, Goal: (b || a).Goal, ad, bd, v: ad - bd, status };
+  });
+  const roll = dim => {
+    const t = {};
+    leaves.forEach(l => { const key = l[dim]; t[key] = t[key] || { k: key, ad: 0, bd: 0 }; t[key].ad += l.ad; t[key].bd += l.bd; });
+    return Object.values(t).map(x => Object.assign(x, { v: x.ad - x.bd })).sort((a, b) => b.bd - a.bd || b.ad - a.ad);
+  };
+  const goals = roll("Goal"), cats = roll("Category");
+  const { lines, leafTot } = budgetLines(pd);
+  const lineRows = Object.values(lines).map(L => {
+    let a = 0;
+    Object.entries(L.leaves).forEach(([k, v]) => { a += (act[k] ? act[k].min : 0) * (leafTot[k] ? v / leafTot[k] : 0); });
+    return { k: L.line, cls: L.cls, ad: a / aDays, bd: L.min / bDays, v: a / aDays - L.min / bDays };
+  }).sort((a, b) => b.bd - a.bd);
+  const sleepA = leaves.filter(l => l.Subcategory === "Sleep").reduce((s, l) => s + l.ad, 0) / 60;
+  const sleepB = leaves.filter(l => l.Subcategory === "Sleep").reduce((s, l) => s + l.bd, 0) / 60;
+  const P = B.parameters || {};
+  const pick = (name, def) => (P[name] && (P[name][S.budgetPhase] ?? Object.values(P[name])[0])) ?? def;
+  const sleepFloor = pick("sleep_floor_h_per_night", 7.5), dlFloor = pick("digital_leisure_floor_min_per_day", 60);
+  const dl = lineRows.find(r => /ocio digital/i.test(r.k));
+  const gA = Object.fromEntries(goals.map(g => [g.k, g])), invR = x => { const i = (gA.Investment || {})[x] || 0, mm = (gA.Maintenance || {})[x] || 0, c = (gA.Consumption || {})[x] || 0; return i / ((i + mm + c) || 1) * 100; };
+  const notRec = leaves.filter(l => l.status === "No registrado").sort((a, b) => b.bd - a.bd);
+  const unb = leaves.filter(l => l.status === "Sin presupuesto").sort((a, b) => b.ad - a.ad);
+  const topDev = leaves.slice().sort((a, b) => Math.abs(b.v) - Math.abs(a.v)).slice(0, 15);
+
+  // Phase timeline + phase composition.
+  const hzDays = dnum(hz.end) - dnum(hz.start) + 1;
+  const phaseLeafRows = B.leaf.filter(r => r[6] === S.budgetPhase);
+  const phGoal = {}; phaseLeafRows.forEach(r => phGoal[r[5]] = (phGoal[r[5]] || 0) + r[7]);
+  const phLines = {}; B.lines.filter(r => r[7] === S.budgetPhase).forEach(r => { phLines[r[0]] = phLines[r[0]] || { h: 0, cls: r[1] }; phLines[r[0]].h += r[8]; });
+  const lineBars = Object.entries(phLines).sort((a, b) => b[1].h - a[1].h).filter(e => e[1].h > 0).map(([n, o]) => ({ n, v: o.h, c: "var(--s1)", label: `${fmtN(o.h, 2)} h/sem · ${fmtHM(o.h * 60 / 7)}/d · ${esc(o.cls)}` }));
+
+  const cmpRow = (r, goal) => { const [lab, cls] = ASSESS(goal ?? r.k, r.v); return [esc(r.k), fmtHM(r.ad), fmtHM(r.bd), `<span class="${cls}">${sgn(r.v, fmtHM)}</span>`, `<span class="${cls}">${lab}</span>`]; };
+  const basis = mode === "covered"
+    ? `Comparación oficial-equivalente sobre ${covered} día(s) cubiertos por el presupuesto (${covStart} → ${covEnd}). Valores en min/día.`
+    : `${esc(monthLong(m.key))} no está cubierto por el presupuesto (horizonte ${esc(hz.start)} → ${esc(hz.end)}). Se muestra una <strong>comparación de referencia</strong>: real del mes (min/día) vs ${esc(S.budgetPhase)} (min/día). No es una varianza oficial.`;
+
+  el.innerHTML = `
+    <div class="card"><div class="card-head"><div><h2>Presupuesto de tiempo ${esc(B.version)}</h2>
+      <p class="hint">Snapshot importado ${esc((B.imported_at || "").slice(0, 10))} · ${B.leaf.length} hojas×fase · horizonte ${esc(hz.start)} → ${esc(hz.end)} · 168 h/semana por fase</p></div>
+      <label class="sub">Fase <select id="phaseSel">${B.phases.map(p => `<option ${p.phase === S.budgetPhase ? "selected" : ""}>${esc(p.phase)}</option>`).join("")}</select></label></div>
+      <div class="phase-bar">${B.phases.map((p, i) => `<div class="${p.phase === curPhase ? "cur" : ""}" style="flex:${dnum(p.end) - dnum(p.start) + 1};background:var(${SLOTS[[0, 6, 2, 5, 1][i % 5]]})" ${attrTip(tipRows(p.phase, [{ n: "Inicio", v: p.start }, { n: "Fin", v: p.end }, { n: "Días", v: String(dnum(p.end) - dnum(p.start) + 1) }]))}>${esc(p.phase)}</div>`).join("")}</div>
+      <div class="note">Fase vigente hoy (${today}): <strong>${esc(curPhase)}</strong> (borde oscuro). Horizonte: ${hzDays} días.</div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Composición de ${esc(S.budgetPhase)} por objetivo</h2><p class="hint">Horas por semana presupuestadas</p>
+        ${stack100("Objetivo (Goal)", "Goal", phGoal, 168)}
+        ${table(["Objetivo", "h/semana", "min/día", "Part."], FIXED_ORDER.Goal.filter(g => phGoal[g]).map(g => [esc(g), fmtN(phGoal[g], 2), fmtHM(phGoal[g] * 60 / 7), fmtPct(phGoal[g] / 168 * 100)]), [1, 2, 3])}</div>
+      <div class="card"><h2>Líneas presupuestarias de ${esc(S.budgetPhase)}</h2><p class="hint">h/semana · min/día · clase</p>${hbars(lineBars)}</div>
+    </div>
+    <div class="section-title">Real vs presupuesto — ${esc(monthLong(m.key))}</div>
+    <div class="card"><p class="hint" style="margin:0">${basis}</p></div>
+    <div class="tiles" style="margin-top:12px">
+      <div class="tile"><div class="k">Sueño h/noche (real vs ppto)</div><div class="v">${fmtN(sleepA, 2)} h</div><div class="d">Ppto ${fmtN(sleepB, 2)} h · piso ${fmtN(sleepFloor, 1)} h · <span class="${sleepA >= sleepFloor ? "up-good" : "up-bad"}">${sleepA >= sleepFloor ? "✓ sobre el piso" : "! bajo el piso"}</span></div></div>
+      <div class="tile"><div class="k">Ratio de inversión</div><div class="v">${fmtPct(invR("ad"))}</div><div class="d">Ppto ${fmtPct(invR("bd"))}</div></div>
+      <div class="tile"><div class="k">Ocio digital (min/día)</div><div class="v">${dl ? fmtHM(dl.ad) : "—"}</div><div class="d">Ppto ${dl ? fmtHM(dl.bd) : "—"} · piso ${fmtN(dlFloor)} min</div></div>
+      <div class="tile"><div class="k">Hojas no registradas</div><div class="v">${notRec.length}</div><div class="d">${fmtHM(notRec.reduce((s, l) => s + l.bd, 0))}/d presupuestado sin evidencia — alerta de captura, no ahorro</div></div>
+      <div class="tile"><div class="k">Hojas sin presupuesto</div><div class="v">${unb.length}</div><div class="d">${fmtHM(unb.reduce((s, l) => s + l.ad, 0))}/d de tiempo real</div></div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Por objetivo</h2><p class="hint">Más Inversión y menos Consumo = favorable; Mantenimiento no se juzga (salvo sueño vs piso)</p>
+        ${table(["Objetivo", "Real/día", "Ppto/día", "Varianza", "Evaluación"], goals.map(g => cmpRow(g)), [1, 2, 3])}
+        <div style="margin-top:14px">${divBars(goals.map(g => ({ n: g.k, v: g.v, label: sgn(g.v, fmtHM) })))}</div></div>
+      <div class="card"><h2>Por categoría</h2><p class="hint">Varianza = Real − Presupuesto (min/día)</p>${divBars(cats.map(c => ({ n: c.k, v: c.v, label: sgn(c.v, fmtHM),
+        tip: tipRows(c.k, [{ n: "Real", v: fmtHM(c.ad) + "/d" }, { n: "Presupuesto", v: fmtHM(c.bd) + "/d" }, { n: "Varianza", v: sgn(c.v, fmtHM) }]) })))}</div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Por línea presupuestaria</h2><p class="hint">El real de una hoja compartida se reparte según el peso de cada línea en el presupuesto</p>
+        ${table(["Línea", "Clase", "Real/día", "Ppto/día", "Varianza"], lineRows.map(r => [esc(r.k), esc(r.cls), fmtHM(r.ad), fmtHM(r.bd), sgn(r.v, fmtHM)]), [2, 3, 4])}</div>
+      <div class="card"><h2>Top 15 desviaciones (hoja)</h2><p class="hint">Dispositivo › Categoría › Subcategoría</p>
+        ${table(["Hoja", "Objetivo", "Real/día", "Ppto/día", "Varianza", "Estado"], topDev.map(l => [esc(`${l.Device} › ${l.Category} › ${l.Subcategory}`), esc(l.Goal), fmtHM(l.ad), fmtHM(l.bd), sgn(l.v, fmtHM),
+          l.status === "No registrado" ? `<span class="up-bad">! ${l.status}</span>` : esc(l.status)]), [2, 3, 4])}</div>
+    </div>
+    ${official ? `<div class="section-title">Salidas oficiales de budget_variance_analysis.py</div>
+      <div class="grid g2">${Object.entries(official).map(([n, t]) => `<div class="card"><h2>${esc(n.replace(/_/g, " "))}</h2>${table(t.headers, t.rows.map(r => r.map(esc)))}</div>`).join("")}</div>` : ""}
+    ${H && H.baseline.length ? `<div class="section-title">Línea base histórica (Annual J)</div>
+      <div class="card">${table(["Línea", "Etiqueta", "Tipo", "Mediana base", "P25", "P75", "Actual sep 26", "Rango sugerido", "Confianza"],
+        H.baseline.map(b => [esc(b.budget_line), esc(b.label), esc(b.protection_or_flexibility), fmtHM(+b.baseline_median_min_per_day), fmtHM(+b.baseline_p25_min_per_day), fmtHM(+b.baseline_p75_min_per_day), fmtHM(+b.current_2026_09_min_per_day),
+          b.suggested_low_min_per_day ? `${fmtHM(+b.suggested_low_min_per_day)} – ${fmtHM(+b.suggested_high_min_per_day)}` : "—", esc(b.confidence)]), [3, 4, 5, 6])}</div>` : ""}`;
+  document.getElementById("phaseSel").addEventListener("change", e => { S.budgetPhase = e.target.value; renderBudget(); });
+  bindTips(el);
+}
+
+/* --------------------------------------------------------------- quality */
+function renderQuality() {
+  const el = document.getElementById("tab-quality");
+  const m = BY_KEY[S.month];
+  const alloc = agg(m.rows, "Allocation_Type"), src = agg(m.rows, "Source"), map = agg(m.rows, "Taxonomy_Mapping");
+  const total = sum(m.rows);
+  const monthRows = MONTHS.map(x => {
+    const k = kpis(x), al = agg(x.rows, "Allocation_Type"), t = sum(x.rows);
+    const obs = (al.Observed || 0) / t * 100;
+    const corr = (x.corrections || []).filter(c => c.Status === "APPLIED").length;
+    return [esc(monthLong(x.key)) + (x.full_month ? "" : " *"), statusBadge(x.status), esc(x.validator || "—"), esc(x.closed_on || "—"), fmtN(x.days),
+      fmtPct(k.coverage), fmtN(k.reviewDays), `${corr} · ${fmtHM(k.correction)}`, fmtPct(obs), fmtPct(k.off / t * 100)];
+  });
+  const corr = (m.corrections || []).map(c => [esc(c.Date), esc(c.Correction_Type), esc(c.Category), fmtN(+c.Before_min), sgn(+c.Applied_min * (c.Direction === "REMOVE" ? -1 : 1), v => fmtN(v)), fmtN(+c.After_min), esc(c.Status), esc(c.Reason)]);
+  const eda = m.eda_review;
+  el.innerHTML = `
+    <div class="card"><h2>Estado de cierre y calidad por mes</h2><p class="hint">Decisión del Period-Close Checklist, validador, cobertura, ajustes y evidencia observada</p>
+      ${table(["Mes", "Estado", "Validador", "Cerrado", "Días", "Cobertura", "Días revisión", "Ajustes (n · min)", "% Observado", "% Off-Device"], monthRows, [4, 5, 6, 7, 8, 9])}</div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>Calidad de la evidencia — ${esc(monthLong(m.key))}</h2><p class="hint">Cómo se obtuvo cada minuto del mes</p>
+        ${stack100("Tipo de asignación", "Allocation_Type", alloc, total)}
+        ${stack100("Fuente", "Source", src, total)}
+        ${table(["Mapeo de taxonomía", "Horas", "Part."], Object.keys(map).sort((a, b) => map[b] - map[a]).map(k => [esc(k), fmtN(map[k] / 60, 1), fmtPct(map[k] / total * 100)]), [1, 2])}</div>
+      <div class="card"><h2>Ajustes manuales auditados</h2><p class="hint">Final_Correction_Audit del período</p>
+        ${corr.length ? table(["Fecha", "Tipo", "Categoría", "Antes", "Aplicado", "Después", "Estado", "Motivo"], corr, [3, 4, 5]) : `<div class="empty">Sin ajustes en el período.</div>`}</div>
+    </div>
+    ${eda ? `<div class="card" style="margin-top:16px"><h2>Candidatos de revisión de taxonomía (EDA)</h2><p class="hint">EDA_Taxonomy_Review_Candidates · primeras ${eda.rows.length} filas</p>${table(eda.headers, eda.rows.map(r => r.map(esc)))}</div>` : ""}
+    ${H ? `<div class="section-title">Hallazgos del análisis histórico anual (${esc(H.folder)})</div>
+      <div class="grid g2"><div class="card"><h2>Patrones</h2>${table(["ID", "Tema", "Descripción", "Clasificación", "Confianza"], H.findings.map(f => [esc(f.finding_id), esc(f.theme), esc(f.description), esc(f.classification), esc(f.confidence)]))}</div>
+      <div class="card"><h2>Decisiones pendientes</h2>${table(["ID", "Decisión", "Default actual", "Estado"], H.decisions.map(d => [esc(d.decision_id), esc(d.decision), esc(d.current_default_in_analysis), esc(d.status)]))}</div></div>` : ""}`;
+  bindTips(el);
+}
+
+/* ------------------------------------------------------------------ shell */
+const TABS = [["overview", "Resumen", renderOverview], ["history", "Histórico", renderHistory], ["taxonomy", "Taxonomía", renderTaxonomy],
+  ["daily", "Diario", renderDaily], ["compare", "Comparativo", renderCompare], ["budget", "Presupuesto", renderBudget], ["quality", "Calidad y cierre", renderQuality]];
+function render() {
+  TABS.forEach(([id]) => document.getElementById("tab-" + id).classList.toggle("active", id === S.tab));
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === S.tab));
+  (TABS.find(t => t[0] === S.tab) || TABS[0])[2]();
+  try { localStorage.setItem("tad.tab", S.tab); } catch (e) {}
+}
+document.getElementById("gen").textContent =
+  `Generado ${D.generated_at} · ${MONTHS.length} mes(es) del sistema actual${H ? ` + histórico ${H.folder.replace("Annual_", "")}` : ""}${B ? ` · presupuesto ${B.version}` : ""}`;
+const monthSel = document.getElementById("monthSel");
+monthSel.innerHTML = MONTHS.map(m => `<option value="${m.key}">${esc(monthLong(m.key))}${m.full_month ? "" : " (interino)"}</option>`).reverse().join("");
+monthSel.value = S.month;
+monthSel.addEventListener("change", () => { S.month = monthSel.value; S.cmpA = S.cmpB = null; render(); });
+document.getElementById("tabs").innerHTML = TABS.map(([id, n]) => `<button role="tab" data-t="${id}">${n}</button>`).join("");
+document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => { S.tab = b.dataset.t; render(); }));
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const root = document.documentElement, dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("tad.theme", root.dataset.theme); } catch (e) {}
+  render();
+});
+try { const t = localStorage.getItem("tad.theme"); if (t) document.documentElement.dataset.theme = t;
+  const tb = localStorage.getItem("tad.tab"); if (tb && TABS.some(x => x[0] === tb)) S.tab = tb; } catch (e) {}
+/* Deep links: #history, #budget, ... and optional month: #taxonomy/2026-09 */
+const [hTab, hMonth] = location.hash.slice(1).split("/");
+if (TABS.some(x => x[0] === hTab)) S.tab = hTab;
+if (hMonth && BY_KEY[hMonth]) { S.month = hMonth; monthSel.value = hMonth; }
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(render, 150); });
+render();
+</script>
+</body>
+</html>
