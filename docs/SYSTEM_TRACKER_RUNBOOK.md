@@ -450,6 +450,32 @@ saving), Unbudgeted leaves, top deviations, sleep and digital-leisure floors.
 Without coverage (e.g. October 2026) the script exits 0 with a coverage note;
 do not pass `--require-budget` for such periods.
 
+### H3b. Consolidated dashboard
+
+After the close (and H3 when a budget covers the period), rebuild the
+dashboard. It discovers every month automatically; nothing to configure:
+
+```powershell
+python .\dashboard_builder.py
+```
+
+Expected: one line per month, `RESULT: DASHBOARD BUILT.` Open
+`output/Dashboard/Time_Dashboard.html` (self-contained, works offline).
+Tabs: Resumen, Histórico, Taxonomía, Diario, Comparativo, Presupuesto,
+Calidad y cierre. Deep links: `Time_Dashboard.html#budget` or
+`#taxonomy/2026-09`.
+
+Sources: `Final/<YYYY-MM-01>_<end>/` (a full-month folder wins; otherwise
+the longest folder starting on day 1 is shown as interim), `Report/`
+(close decision, attention items), `EDA/`, `Budget/` (official outputs when
+present), the latest `Historical/Annual_*` and the latest budget snapshot in
+`Reference/Budget/`. Legacy months in the historical charts come from
+`Annual_G_Monthly_Trends.csv`; current months are computed from the Final.
+Actual vs Budget for months outside the budget horizon is a labelled
+reference comparison, never the official variance.
+
+Layout and charts live in `dashboard/dashboard_template.html`.
+
 ### H4. Commit
 
 ```powershell
@@ -495,7 +521,7 @@ period_close_validator
         ↓
 variation_analysis → budget_variance_analysis (budget periods)
         ↓
-Period-Close Checklist → archive → historical integration → commit
+Period-Close Checklist → archive → historical integration → dashboard_builder → commit
 ```
 
 ## Which machine runs what

@@ -86,6 +86,15 @@ Budget KPIs: Investment ratio, discretionary consumption proxy (definition
 above), digital leisure min/day vs its 60-min floor, sleep h/night vs 7.5,
 top 10 absolute deviations.
 
+## Consolidated dashboard
+
+`python .\dashboard_builder.py` → `output/Dashboard/Time_Dashboard.html`:
+one self-contained page with every closed month (Final), the 13-month
+historical trend, the full taxonomy (Category → Subcategory, Domain, Energy,
+Goal, Device, Activity), daily detail, month-vs-month comparison, Actual vs
+Budget and close / data-quality status. Rebuild after each close (runbook
+H3b). Template: `dashboard/dashboard_template.html`.
+
 ## Reporting cadence
 
 - **Interim review (~15 days):** operational, provisional; does not close the period.

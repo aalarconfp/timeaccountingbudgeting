@@ -1,538 +1,118 @@
 # Time Accounting & Budgeting System
 
-> An open-source framework for personal time intelligence:
-> **Tracking → Time Accounting → Time Budgeting → KPIs / decision support.**
-> Tracking, time accounting and time budgeting (Actual vs Budget) are implemented; the broader KPI/decision layer is planned.
+> Personal time intelligence: **track what happened → account for every hour →
+> budget where time should go → measure the variance.**
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
-![Git](https://img.shields.io/badge/Git-Version_Control-orange)
+![Tests](https://img.shields.io/badge/tests-unittest-brightgreen)
 ![Status](https://img.shields.io/badge/status-active_development-green)
 
+The system turns fragmented activity data (computer, phone and manual habit
+logs) into one auditable model of the 24-hour day. It treats time as a finite
+resource: every month closes like a set of books, and a versioned time budget
+is compared with what actually happened.
+
 ---
 
-# Overview
+## What it delivers
 
-Time Accounting & Budgeting System is a structured time-intelligence framework designed to transform fragmented activity data into a consistent model for time accounting, analysis, and future time budgeting.
+| Layer | Question | Output |
+|---|---|---|
+| **Time accounting** | Where did my time go? | Reconciled monthly close: every minute classified, overlaps removed, the untracked remainder made explicit |
+| **Analysis** | What changed and why? | Standard Report, exploratory analysis, month-to-month variation, 13-month historical trends |
+| **Time budgeting** | Where should my time go? | Versioned budget in hours/week by phase; Actual vs Budget with favorable/unfavorable assessment and capture alerts |
+| **Dashboard** | What does it all look like together? | One self-contained HTML page with every closed month, the full taxonomy, history, comparisons, budget and close status |
 
-The core methodology is:
+## How it works
 
 ```text
-Track what happened
-        ↓
-Account for available time
-        ↓
-Analyze allocation
-        ↓
-Budget future allocation
-        ↓
-Measure variance and trends
+Sources ─► Normalize ─► Reconcile ─► Classify ─► Close the month ─► Analyze ─► Budget vs Actual ─► Dashboard
+              (each step is reproducible; human review only where evidence is insufficient)
 ```
 
-The system treats time as a finite resource and provides a reproducible analytical pipeline for collection, normalization, reconciliation, classification, accounting, analysis, human review, and period close.
-
----
-
-# Objectives
-
-The project is designed to be:
-
-- **Structured** — multiple tracking sources are transformed into a common model.
-- **Reproducible** — the same inputs and processing rules should produce consistent outputs.
-- **Auditable** — transformations, adjustments, validation, and period status are inspectable.
-- **Efficient** — automation reduces repetitive data processing while preserving human review where needed.
-- **Analytical** — time is analyzed across multiple dimensions rather than as a single total.
-- **Budget-oriented** — historical accounting provides the foundation for future time budgets and variance analysis.
-
----
-
-# Methodology
+The accounting identity behind every period:
 
 ```text
-Data Collection
-      ↓
-Normalization
-      ↓
-Source Reconciliation
-      ↓
-Time Accounting
-      ↓
-Taxonomy Classification
-      ↓
-Integrated Daily Model
-      ↓
-Analysis & KPIs
-      ↓
-Human Review
-      ↓
-Period Close
-      ↓
-Historical Analysis
-      ↓
-Time Budgeting
+Clock Capacity (days × 24 h) = Unique Tracked Time + Off-Device Life
 ```
 
-## 1. Data Collection
+Tracked overlap is counted once. Time no source observed stays visible as
+*Off-Device Life* instead of being guessed.
 
-The system collects activity data from independent tracking sources while preserving source-level information before analytical transformations.
+Every activity is classified on five dimensions: **Category › Subcategory**,
+**Domain** (Physical, Vocational, Relational, …), **Energy** (Deep, Active,
+Recovery, Shallow, Passive) and **Goal** (Investment, Maintenance,
+Consumption).
 
-## 2. Normalization
+The step-by-step procedure lives in one place:
+[`docs/SYSTEM_TRACKER_RUNBOOK.md`](docs/SYSTEM_TRACKER_RUNBOOK.md).
 
-Different source formats are converted into a canonical analytical structure containing concepts such as:
+## Time budget
 
-- Date
-- Source
-- Category
-- Subcategory
-- Duration
-- Event Count
-- Allocation Type
-- Evidence Type
-- Evidence Source
+An approved workbook is imported as an immutable, versioned snapshot
+(Device × Category × Subcategory, hours/week per phase). Each budget period is
+compared on the days it covers:
 
-## 3. Source Reconciliation
+- **Variance = Actual − Budget.** More Investment and less Consumption is
+  favorable; Maintenance is not judged, except Sleep against its floor.
+- **Budget with no recorded actual is a capture alert**, never a saving.
+- KPIs: investment ratio, discretionary consumption, digital-leisure and sleep
+  floors, top deviations, coverage.
 
-Sources may contain overlapping, missing, duplicated, or inconsistent records. Reconciliation establishes a controlled and explainable representation of the available evidence.
+Method: [`docs/BUDGET_DESIGN.md`](docs/BUDGET_DESIGN.md).
 
-The objective is not to force every source to agree, but to preserve the most useful representation of what is known.
+## Dashboard
 
-## 4. Time Accounting
+```powershell
+python .\dashboard_builder.py      # → output/Dashboard/Time_Dashboard.html
+```
 
-The system separates:
+Rebuild it after each monthly close. It discovers every period automatically
+and works offline. It has seven views: **Overview, History, Taxonomy, Daily,
+Compare, Budget, Quality & close.** Deep links such as
+`Time_Dashboard.html#budget` or `#taxonomy/2026-09` open a view or month
+directly.
 
-- Clock Capacity
-- Corrected Tracked Time
-- Tracked Overlap
-- Unique Tracked Time
-- Off-Device / Untracked Life
-- Analytical Activity
+## Quick start
 
-The core accounting relationship is:
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+copy config\local_settings.example.json config\local_settings.json   # devices, shared-device rule
+python -m unittest discover tests
+```
+
+Then follow the runbook for a monthly close. `input/` and `output/` hold
+personal data and are not version-controlled.
+
+## Design principles
+
+- **Accounting before optimization:** establish what happened before deciding what should.
+- **Evidence over assumption:** observed, inferred, estimated and manually adjusted time stay distinguishable.
+- **Explicit adjustments:** human corrections are auditable inputs, never hidden source edits.
+- **Transparent uncertainty over false precision.**
+- **Reproducible periods:** a closed month can be rebuilt from versioned code and the same inputs.
+
+## Repository
 
 ```text
-Clock Capacity
-    =
-Unique Tracked Time
-+
-Off-Device / Untracked Life
+*.py           pipeline modules (collection → reconciliation → analysis → close → budget → dashboard)
+config/        taxonomy, budget settings, local-settings template
+dashboard/     HTML template of the consolidated dashboard
+docs/          runbook, methods, checklists
+tests/         automated tests
+input/ output/ local data (git-ignored)
 ```
 
-Tracked overlap is handled explicitly in the accounting layer rather than silently discarded from analytical activity.
+Documentation index: [`docs/README.md`](docs/README.md).
 
-## 5. Taxonomy Classification
+## Status & roadmap
 
-Activities can be analyzed across multiple dimensions:
+**Implemented:** multi-source tracking, reconciliation and time-universe
+accounting; taxonomy; monthly close with validation; historical integration
+(13 months); versioned time budget and Actual vs Budget; consolidated
+dashboard.
 
-- Category
-- Subcategory
-- Domain
-- Energy
-- Goal
-
-This creates a consistent analytical vocabulary for allocation, trends, and budgeting.
-
-## 6. Integrated Daily Model
-
-Normalized sources are consolidated into a daily analytical model that becomes the foundation for:
-
-- Reconciliation
-- Detail analysis
-- Exploratory analysis
-- KPI reporting
-- Historical comparison
-- Budget development and Actual vs Budget
-
-## 7. Analysis & KPIs
-
-The analytical layer supports:
-
-- Category allocation
-- Domain allocation
-- Goal allocation
-- Energy allocation
-- Source and device analysis
-- Daily and period trends
-- Hierarchical activity analysis
-- Coverage and data-quality analysis
-- Historical variation analysis
-
-## 8. Human Review
-
-Automation is deliberately separated from human judgment.
-
-When evidence is insufficient to identify an activity, the system can flag the period for review rather than inventing an allocation.
-
-Manual adjustments are explicit, auditable inputs.
-
-> **Transparent uncertainty is preferable to false precision.**
-
-## 9. Period Close
-
-Completed periods can be validated and documented before becoming stable historical reference periods.
-
-A close validates:
-
-- Source coverage
-- Data integrity
-- Accounting closure
-- Taxonomy consistency
-- Manual adjustments
-- Analytical outputs
-- Review items
-
-## 10. Time Budgeting
-
-An approved budget is defined in hours per week for every taxonomy leaf
-(Device × Category × Subcategory, with Domain / Energy / Goal) and budget
-phase. The budget is a separate layer: it is compared with actuals, never
-mixed into them.
-
-```text
-approved workbook ──budget_import.py──► versioned, immutable CSV snapshot
-                                              │
-Final analysis (post-adjustment) ─────────────┤
-                                              ▼
-                              budget_variance_analysis.py
-                     (period budget = Σ phases × days in period / 7;
-                      compared on budget-covered days only)
-```
-
-- Variance = Actual − Budget, by leaf and by Device, Category, Goal, Energy,
-  Domain and budget line; favorable/unfavorable by Goal (more Investment,
-  less Consumption; Maintenance not judged except Sleep vs its floor).
-- Budget with no recorded actual is a capture alert, not a saving.
-- KPIs: investment ratio, discretionary consumption, digital leisure and sleep
-  floors, top deviations; coverage is always reported.
-- Integrated into the Standard Report (only when a budget covers the period),
-  the Monthly KPI Summary and `period_close_validator.py --require-budget`.
-
-Method: `docs/BUDGET_DESIGN.md`. The historical baseline and scenario
-templates that informed the first budget come from `historical_annual.py`
-(`docs/HISTORICAL_ANNUAL_ANALYSIS.md`).
-
----
-
-# Core Architecture
-
-```text
-                    ┌─────────────────────┐
-                    │   Source Systems    │
-                    └──────────┬──────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Collection &        │
-                    │ Normalization       │
-                    └──────────┬──────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Reconciliation &    │
-                    │ Validation          │
-                    └──────────┬──────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Time Accounting     │
-                    └──────────┬──────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Taxonomy &          │
-                    │ Classification      │
-                    └──────────┬──────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Integrated Daily    │
-                    │ Model               │
-                    └──────────┬──────────┘
-                               ↓
-             ┌─────────────────┴─────────────────┐
-             ↓                                   ↓
-   ┌─────────────────────┐             ┌─────────────────────┐
-   │ Analysis & KPIs     │             │ Human Review        │
-   └──────────┬──────────┘             └──────────┬──────────┘
-              └────────────────┬──────────────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Period Close        │
-                    └──────────┬──────────┘
-                               ↓
-                    ┌─────────────────────┐
-                    │ Historical Analysis │
-                    │ & Budget            │
-                    └─────────────────────┘
-```
-
----
-
-# Key Design Principles
-
-### Accounting Before Optimization
-
-```text
-Accounting → Analysis → Budgeting
-```
-
-The system establishes what happened before attempting to determine what should happen.
-
-### Evidence Over Assumption
-
-Observed, inferred, estimated, and manually adjusted time are treated as different evidence states.
-
-### Preserve the Time Universe
-
-Analytical activity and finite clock capacity are separate concepts. This allows overlapping activity to be analyzed without implying that a period contains more time than physically exists.
-
-### Explicit Manual Adjustments
-
-Human knowledge can improve incomplete tracking, but corrections enter through explicit adjustment records rather than hidden source edits.
-
-### Separation of Source and Device
-
-Source identifies the data pipeline. Device identifies the physical or logical origin when that distinction is relevant.
-
-### Period-Based Analysis
-
-Defined periods provide stable baselines, comparisons, validation, and historical reference points.
-
-### Reproducibility
-
-A closed period should be reproducible from versioned processing logic and documented methodology.
-
----
-
-# Analytical Model
-
-The project is organized around three layers:
-
-```text
-Tracking
-   ↓
-Time Accounting
-   ↓
-Time Budgeting
-   ↓
-KPIs & Decision Support   (planned)
-```
-
-### Tracking
-**What happened?**
-
-Collect and normalize activity.
-
-### Time Accounting
-**Where did available time go?**
-
-Reconcile sources and account for the finite time universe.
-
-### Time Budgeting
-**Where should available time go?**
-
-Define planned allocations and measure Actual vs Budget variance.
-
----
-
-# Efficiency & Analysis
-
-Automation is used for:
-
-- Data ingestion
-- Normalization
-- Reconciliation
-- Validation
-- Taxonomy mapping
-- Aggregation
-- KPI generation
-- Historical comparison
-- Period validation
-
-Human intervention is reserved for contextual judgment where automated inference would create false precision.
-
-```text
-Automation
-    +
-Evidence
-    +
-Human Judgment
-    =
-Reliable Time Intelligence
-```
-
----
-
-# Quality Controls
-
-The pipeline validates:
-
-- Missing dates
-- Duplicate records
-- Negative durations
-- Schema consistency
-- Source coverage
-- Taxonomy completeness
-- Reconciliation consistency
-- Accounting closure
-- Manual adjustment application
-- Period integrity
-
-The system distinguishes between:
-
-1. Data errors
-2. Evidence limitations
-3. Genuine untracked time
-4. Analytical uncertainty
-
----
-
-# Current Capabilities
-
-- Multi-source time collection
-- Canonical normalization
-- Source reconciliation
-- Time-universe accounting
-- Taxonomy-based classification
-- Integrated daily analysis
-- Category, domain, energy, and goal analysis
-- Source and device analysis
-- Historical period comparison
-- Manual adjustment auditing
-- Shared-device (secondary user) attribution
-- Evidence-based review
-- Period validation and close
-- Variation analysis between periods
-- Versioned time budget (snapshot from an approved workbook)
-- Actual vs Budget variance analysis and budget KPIs
-- Reproducible processing pipelines
-- Automated test coverage
-
-# Planned
-
-- Budget variance trends across periods
-- KPI and budgeting decision layer
-
----
-
-# Technology Stack
-
-- Python
-- CSV-based analytical data pipelines
-- Git
-- Automated tests
-- Markdown documentation
-- PowerShell automation where appropriate
-
-The architecture is modular so additional sources, analytical layers, dashboards, and budgeting capabilities can be introduced without replacing the accounting foundation.
-
----
-
-# Repository Structure
-
-```text
-Time Accounting & Budgeting System/
-│
-├── *.py
-│   └── Pipeline modules (collection, normalization, integration,
-│       reconciliation, analysis, reporting, period-close validation)
-│
-├── config/
-│   └── Configuration, taxonomy, and a local-settings template
-│       (devices, shared-device rule)
-│
-├── docs/
-│   ├── System documentation
-│   ├── Data collection methodology
-│   └── Runbooks
-│
-├── scripts/
-│   └── Operational automation
-│
-├── tests/
-│   └── Automated validation and regression tests
-│
-├── input/            (not version-controlled)
-│   └── Source data
-│
-├── output/           (not version-controlled)
-│   └── Generated analytical outputs
-│
-└── README.md
-```
-
-Source data and generated outputs should remain separate from version-controlled processing logic wherever appropriate.
-
----
-
-# Roadmap
-
-## Phase 1 — Time Accounting Foundation
-
-- Multi-source collection
-- Normalization
-- Reconciliation
-- Time-universe accounting
-- Taxonomy
-- Data-quality validation
-- Period close
-
-## Phase 2 — Historical Intelligence
-
-- Comparable historical periods
-- Baseline construction
-- Trend analysis
-- Variation analysis
-- Long-term allocation patterns
-
-## Phase 3 — Time Budgeting (implemented)
-
-- Goal-level budgets
-- Domain-level budgets
-- Category-level budgets
-- Planned vs. actual allocation
-- Budget variance analysis
-- Capacity-aware planning
-
-## Phase 4 — KPI & Decision Layer
-
-- Time allocation KPIs
-- Coverage KPIs
-- Budget variance KPIs
-- Trend indicators
-- Efficiency metrics
-- Period-over-period decision support
-
-## Future Extensions
-
-- Interactive dashboards
-- Automated reporting
-- Additional tracking integrations
-- Forecasting
-- Advanced anomaly detection
-- Productivity intelligence
-- Optional opportunity-cost extensions
-
----
-
-# Project Philosophy
-
-The system is not designed to maximize the amount of tracked data.
-
-It is designed to maximize the **usefulness, consistency, efficiency, and interpretability of time data**.
-
-A reliable time-accounting system should be able to explain:
-
-- what is known,
-- what is estimated,
-- what was manually adjusted,
-- what remains uncertain,
-- how the period reconciles,
-- and how historical evidence can inform future budgets.
-
-The goal is not perfect measurement.
-
-The goal is:
-
-> **Structured, auditable, decision-useful time intelligence.**
-
----
-
-# Status
-
-No release has been tagged yet. The current codebase implements the accounting, reconciliation, analysis, validation and period-close framework, plus the time-budgeting layer (versioned budget snapshot and Actual vs Budget). The KPI/decision layer is next.
-
----
+**Next:** budget-variance trends across periods; KPI and decision layer;
+forecasting.

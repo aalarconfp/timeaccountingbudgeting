@@ -31,7 +31,7 @@ Summary:
 8. `detail_analysis.py` → `exploratory_analysis.py` → taxonomy-review loop only for a genuine mapping error
 9. `standard_report.py` → `period_close_validator.py`
 9b. `variation_analysis.py` → `budget_variance_analysis.py` (budget periods; `--require-budget` at close)
-10. Period-Close Checklist → archive → historical integration → commit
+10. Period-Close Checklist → archive → historical integration → `dashboard_builder.py` → commit
 
 ## Accounting model
 
@@ -53,8 +53,7 @@ the same elapsed time. Taxonomy: 12 categories, 7 domains, 5 energies, 3 goals.
 - `SOURCE_PROCESSING.md` — per-source normalization
 - `INTEGRATION_AND_RECONCILIATION.md` — consolidation and adjustment rules
 - `TAXONOMY_AND_EDA.md` — taxonomy, hierarchy, EDA
-- `REPORTING.md` — Standard Report and recurring KPI definitions
-- `INTERIM_REVIEW_PROCEDURE.md` — ~15-day operational review vs. monthly close; Notion report flow
+- `REPORTING.md` — Standard Report, recurring KPI definitions and the consolidated dashboard- `INTERIM_REVIEW_PROCEDURE.md` — ~15-day operational review vs. monthly close; Notion report flow
 - `HISTORICAL_DATA_INTEGRATION.md` — one-year historical integration procedure
 - `HISTORICAL_BRIDGE.md` — Phase 2 legacy-to-current bridge: architecture, mapping tables, accounting rules
 - `HISTORICAL_ANNUAL_ANALYSIS.md` — annual analysis in the current taxonomy (Standard Report / EDA / Final Detail analogues), legacy-to-current mapping, budget baseline, scenario templates and the proxy-allocation worksheet workflow
