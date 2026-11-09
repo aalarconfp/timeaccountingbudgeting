@@ -10,7 +10,7 @@ shared-device attribution rule are configured per installation (see
 
 | Project | Repo | Responsibility |
 |---|---|---|
-| **System Tracker** | this repo | Import desktop data · laptop ActivityWatch · iPhone · Habit · taxonomy · integration · reconciliation · final / detail / EDA analysis · Standard Report · period close · historical integration · budgets (planned) |
+| **System Tracker** | this repo | Import desktop data · laptop ActivityWatch · iPhone · Habit · taxonomy · integration · reconciliation · final / detail / EDA analysis · Standard Report · period close · historical integration · budget snapshot and Actual vs Budget |
 | **Desktop Tracker Collector** | `../Desktop Tracker Collector/` | Desktop ActivityWatch only: collect → Raw → Fact_Time → Daily_Time → validate → portable export package |
 
 The desktop PC does not need this repo. It produces a versioned export package
@@ -30,6 +30,7 @@ Summary:
 7. `final_analysis.py` → review correction audit / daily reconciliation / time universe *(human gate)*
 8. `detail_analysis.py` → `exploratory_analysis.py` → taxonomy-review loop only for a genuine mapping error
 9. `standard_report.py` → `period_close_validator.py`
+9b. `variation_analysis.py` → `budget_variance_analysis.py` (budget periods; `--require-budget` at close)
 10. Period-Close Checklist → archive → historical integration → commit
 
 ## Accounting model
@@ -57,7 +58,7 @@ the same elapsed time. Taxonomy: 12 categories, 7 domains, 5 energies, 3 goals.
 - `HISTORICAL_DATA_INTEGRATION.md` — one-year historical integration procedure
 - `HISTORICAL_BRIDGE.md` — Phase 2 legacy-to-current bridge: architecture, mapping tables, accounting rules
 - `HISTORICAL_ANNUAL_ANALYSIS.md` — annual analysis in the current taxonomy (Standard Report / EDA / Final Detail analogues), legacy-to-current mapping, budget baseline, scenario templates and the proxy-allocation worksheet workflow
-- `BUDGET_DESIGN.md` — future budget design
+- `BUDGET_DESIGN.md` — budget snapshot, period proration, coverage and Actual vs Budget method
 - `TROUBLESHOOTING.md` — common failures and recovery
 - `CHANGE_CONTROL.md` — rules for changing the analytical system
 - `GLOSSARY.md` — canonical terminology

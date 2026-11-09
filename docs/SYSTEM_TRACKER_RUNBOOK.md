@@ -97,7 +97,8 @@ python -m py_compile `
     habit_screenshot_builder.py integration_analysis.py `
     integration_human_review.py integrated_daily_time_builder.py `
     habit_manual_adjustments.py final_analysis.py detail_analysis.py `
-    exploratory_analysis.py standard_report.py period_close_validator.py
+    exploratory_analysis.py standard_report.py period_close_validator.py `
+    variation_analysis.py budget_import.py budget_variance_analysis.py
 ```
 
 ### A3. Confirm inputs / outputs exist
@@ -419,7 +420,37 @@ python .\variation_analysis.py `
 
 Compares two frozen final-analysis periods → `output/Integrated/Analysis/Variation/`.
 
-### H3. Commit
+### H3. Actual vs Budget  *(periods covered by the approved budget)*
+
+Runs after H2, on the post-adjustment Final. Method: `docs/BUDGET_DESIGN.md`.
+
+Only when the approved budget changes (new workbook version):
+
+```powershell
+python .\budget_import.py --source ".\output\Planning\<workbook>.xlsx" --dry-run
+python .\budget_import.py --source ".\output\Planning\<workbook>.xlsx"
+```
+
+Expected: `RESULT: BUDGET IMPORTED.` (or `BUDGET ALREADY IMPORTED.`). Review
+any taxonomy WARNING lines; they are reported, not corrected.
+
+Every budget period:
+
+```powershell
+python .\budget_variance_analysis.py --start-date "2026-11-01" --end-date "2026-11-30" --update-kpi-summary
+python .\period_close_validator.py `
+    --start-date "2026-11-01" --end-date "2026-11-30" `
+    --require-eda --require-standard-report --require-budget
+```
+
+Human review: coverage (days compared), budget reconciliation, every
+**Not recorded** leaf (a capture gap — e.g. offline work not logged in Habit —
+fix the evidence through D3/E1 if it is real time, never treat it as a
+saving), Unbudgeted leaves, top deviations, sleep and digital-leisure floors.
+Without coverage (e.g. October 2026) the script exits 0 with a coverage note;
+do not pass `--require-budget` for such periods.
+
+### H4. Commit
 
 ```powershell
 git status
@@ -462,6 +493,8 @@ standard_report
         ↓
 period_close_validator
         ↓
+variation_analysis → budget_variance_analysis (budget periods)
+        ↓
 Period-Close Checklist → archive → historical integration → commit
 ```
 
@@ -489,3 +522,5 @@ Period-Close Checklist → archive → historical integration → commit
 9. Do not import desktop data that overlaps a closed period without recording why.
 10. Do not let the Standard Report become the EDA.
 11. Do not rely on chat history — a closed period must be reproducible from this runbook.
+12. Do not read the budget workbook in the pipeline or edit a budget snapshot;
+    re-import as a new version.

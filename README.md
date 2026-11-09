@@ -2,7 +2,7 @@
 
 > An open-source framework for personal time intelligence:
 > **Tracking → Time Accounting → Time Budgeting → KPIs / decision support.**
-> Tracking and time accounting are implemented; time budgeting and the KPI/decision layer are planned.
+> Tracking, time accounting and time budgeting (Actual vs Budget) are implemented; the broader KPI/decision layer is planned.
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![Git](https://img.shields.io/badge/Git-Version_Control-orange)
@@ -23,9 +23,9 @@ Account for available time
         ↓
 Analyze allocation
         ↓
-Budget future allocation       (planned)
+Budget future allocation
         ↓
-Measure variance and trends    (budget variance planned)
+Measure variance and trends
 ```
 
 The system treats time as a finite resource and provides a reproducible analytical pipeline for collection, normalization, reconciliation, classification, accounting, analysis, human review, and period close.
@@ -68,7 +68,7 @@ Period Close
       ↓
 Historical Analysis
       ↓
-Time Budgeting (planned)
+Time Budgeting
 ```
 
 ## 1. Data Collection
@@ -139,7 +139,7 @@ Normalized sources are consolidated into a daily analytical model that becomes t
 - Exploratory analysis
 - KPI reporting
 - Historical comparison
-- Budget development (planned)
+- Budget development and Actual vs Budget
 
 ## 7. Analysis & KPIs
 
@@ -179,26 +179,35 @@ A close validates:
 - Analytical outputs
 - Review items
 
-## 10. Time Budgeting *(planned — not yet implemented)*
+## 10. Time Budgeting
 
-Time budgeting is the next planned layer, to be built on historical accounting.
-
-The intended hierarchy is:
+An approved budget is defined in hours per week for every taxonomy leaf
+(Device × Category × Subcategory, with Domain / Energy / Goal) and budget
+phase. The budget is a separate layer: it is compared with actuals, never
+mixed into them.
 
 ```text
-Goal
-  ↓
-Domain
-  ↓
-Category
+approved workbook ──budget_import.py──► versioned, immutable CSV snapshot
+                                              │
+Final analysis (post-adjustment) ─────────────┤
+                                              ▼
+                              budget_variance_analysis.py
+                     (period budget = Σ phases × days in period / 7;
+                      compared on budget-covered days only)
 ```
 
-It will enable planned-versus-actual analysis and budget variance measurement.
+- Variance = Actual − Budget, by leaf and by Device, Category, Goal, Energy,
+  Domain and budget line; favorable/unfavorable by Goal (more Investment,
+  less Consumption; Maintenance not judged except Sleep vs its floor).
+- Budget with no recorded actual is a capture alert, not a saving.
+- KPIs: investment ratio, discretionary consumption, digital leisure and sleep
+  floors, top deviations; coverage is always reported.
+- Integrated into the Standard Report (only when a budget covers the period),
+  the Monthly KPI Summary and `period_close_validator.py --require-budget`.
 
-A first analytical step exists: `historical_annual.py` produces a historical
-baseline and budget *scenario templates* from the bridged history
-(`docs/HISTORICAL_ANNUAL_ANALYSIS.md`). It does not implement or approve a
-budget; outputs stay in the git-ignored `output/` folder.
+Method: `docs/BUDGET_DESIGN.md`. The historical baseline and scenario
+templates that informed the first budget come from `historical_annual.py`
+(`docs/HISTORICAL_ANNUAL_ANALYSIS.md`).
 
 ---
 
@@ -246,7 +255,7 @@ budget; outputs stay in the git-ignored `output/` folder.
                                ↓
                     ┌─────────────────────┐
                     │ Historical Analysis │
-                    │ & Budget (planned)  │
+                    │ & Budget            │
                     └─────────────────────┘
 ```
 
@@ -297,7 +306,7 @@ Tracking
    ↓
 Time Accounting
    ↓
-Time Budgeting            (planned)
+Time Budgeting
    ↓
 KPIs & Decision Support   (planned)
 ```
@@ -312,10 +321,10 @@ Collect and normalize activity.
 
 Reconcile sources and account for the finite time universe.
 
-### Time Budgeting *(planned)*
+### Time Budgeting
 **Where should available time go?**
 
-Define planned allocations and measure variance. Not implemented yet.
+Define planned allocations and measure Actual vs Budget variance.
 
 ---
 
@@ -387,15 +396,14 @@ The system distinguishes between:
 - Evidence-based review
 - Period validation and close
 - Variation analysis between periods
+- Versioned time budget (snapshot from an approved workbook)
+- Actual vs Budget variance analysis and budget KPIs
 - Reproducible processing pipelines
 - Automated test coverage
 
 # Planned
 
-- Time budgeting
-- Budget hierarchy (Goal → Domain → Category)
-- Planned vs. actual allocation
-- Budget variance analysis
+- Budget variance trends across periods
 - KPI and budgeting decision layer
 
 ---
@@ -470,7 +478,7 @@ Source data and generated outputs should remain separate from version-controlled
 - Variation analysis
 - Long-term allocation patterns
 
-## Phase 3 — Time Budgeting
+## Phase 3 — Time Budgeting (implemented)
 
 - Goal-level budgets
 - Domain-level budgets
@@ -525,6 +533,6 @@ The goal is:
 
 # Status
 
-No release has been tagged yet. The current codebase implements the accounting, reconciliation, analysis, validation, and period-close framework. Time budgeting is the next planned layer built on top of that foundation.
+No release has been tagged yet. The current codebase implements the accounting, reconciliation, analysis, validation and period-close framework, plus the time-budgeting layer (versioned budget snapshot and Actual vs Budget). The KPI/decision layer is next.
 
 ---

@@ -112,6 +112,18 @@ Date closed: _________________________
 - [ ] Major discretionary drains reviewed.
 - [ ] Recommendation reviewed.
 
+## J2. Actual vs Budget  *(only if the approved budget covers the period)*
+
+- [ ] Budget version recorded: ____________________
+- [ ] `budget_variance_analysis.py` completed; `--update-kpi-summary` applied.
+- [ ] Coverage reviewed (covered days / period days); uncovered days explained.
+- [ ] Period budget reconciles to covered days × 24 h.
+- [ ] Every **Not recorded** leaf reviewed as a capture question (not a saving).
+- [ ] Unbudgeted leaves and top 10 deviations reviewed.
+- [ ] Sleep vs 7.5 h/night and digital leisure vs 60 min/day floors reviewed.
+- [ ] `period_close_validator.py ... --require-budget` passed.
+- [ ] Not applicable (no budget coverage) — noted.
+
 ## K. Historical integration
 
 - [ ] Period outputs archived.

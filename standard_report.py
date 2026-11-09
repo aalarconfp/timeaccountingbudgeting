@@ -25,6 +25,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--start-date", required=True)
     parser.add_argument("--end-date", required=True)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--no-budget",
+        action="store_true",
+        help="Omit the Actual vs Budget section even if a budget covers the period.",
+    )
     return parser.parse_args()
 
 
@@ -237,6 +242,7 @@ def build_report(
     unique: float,
     off_device: float,
     overlap: float,
+    budget_lines: list[str] | None = None,
 ) -> str:
     days = period_days(start_date, end_date)
     analytical_total = sum(number(row["Duration_sec"]) for row in rows)
@@ -401,6 +407,23 @@ def build_report(
             "This report is intentionally small and recurring.",
             "Use exploratory_analysis.py for deeper taxonomy and behavioral diagnostics.",
             "",
+        ]
+    )
+
+    # Optional: only when an approved budget covers part of the period.
+    if budget_lines:
+        lines.extend(
+            [
+                "=" * 78,
+                "7. ACTUAL vs BUDGET",
+                "=" * 78,
+                *budget_lines,
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
             "=" * 78,
             "END OF STANDARD REPORT",
             "=" * 78,
@@ -408,6 +431,22 @@ def build_report(
     )
 
     return "\n".join(lines) + "\n"
+
+
+def budget_section(start_date: date, end_date: date) -> list[str] | None:
+    """Brief budget block, or None when no budget covers the period."""
+    import budget_core
+
+    try:
+        snapshot = budget_core.load_snapshot()
+    except budget_core.BudgetNotAvailable:
+        return None
+    if not budget_core.coverage(snapshot, start_date, end_date).covered_days:
+        return None
+    result = budget_core.compute_variance(
+        snapshot, start_date, end_date, final_dir(start_date, end_date)
+    )
+    return budget_core.brief_lines(result)
 
 
 def main() -> int:
@@ -447,6 +486,7 @@ def main() -> int:
         unique,
         off_device,
         overlap,
+        None if args.no_budget else budget_section(start_date, end_date),
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
