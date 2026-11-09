@@ -1031,7 +1031,8 @@ def brief_lines(result: VarianceResult) -> list[str]:
             continue
         lines.append(
             f"{goal + ':':<24} actual {_h(r['Actual_min'])} vs budget "
-            f"{_h(r['Budget_min'])} ({_h(r['Variance_min'])}; {r['Assessment']})"
+            f"{_h(r['Budget_min'])} ({'+' if r['Variance_min'] >= 0 else ''}"
+            f"{_h(r['Variance_min'])}; {r['Assessment']})"
         )
     for name in (
         "Investment ratio",
@@ -1040,10 +1041,12 @@ def brief_lines(result: VarianceResult) -> list[str]:
     ):
         k = result.kpi(name)
         unit = "%" if k["Unit"] == "%" else f" {k['Unit']}"
+        digits = 2 if k["Unit"] == "h/night" else 1
         floor = f"; floor {k['Floor']:g}" if k["Floor"] != "" else ""
         status = f" [{k['Status']}]" if k["Status"] else ""
         lines.append(
-            f"{name + ':':<24} {k['Actual']:.1f}{unit} vs {k['Budget']:.1f}{unit}"
+            f"{name + ':':<24} {k['Actual']:.{digits}f}{unit} vs "
+            f"{k['Budget']:.{digits}f}{unit}"
             f"{floor}{status}"
         )
     not_rec = [r for r in result.leaf_rows if r["Status"] == "Not recorded"]
