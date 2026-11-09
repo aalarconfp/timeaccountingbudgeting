@@ -51,6 +51,10 @@ Desktop Tracker Collector                 System Tracker (this repo)
                                                        ▼
                                         period_close_validator.py
                                                        ▼
+                     variation_analysis.py → budget_variance_analysis.py
+                     (period vs previous)     (Actual vs Budget; reads the
+                                               snapshot in output/Reference/Budget/)
+                                                       ▼
                               Period-Close Checklist → archive → historical → commit
 ```
 
@@ -79,6 +83,13 @@ detail_analysis  →  exploratory_analysis
 standard_report
         ↓
 period_close_validator  --require-eda --require-standard-report
+        ↓
+variation_analysis  →  budget_variance_analysis   (budget periods only;
+        ↓              then period_close_validator --require-budget)
+Period-Close Checklist → archive → historical → commit
+
+Budget snapshot (independent, when the approved budget changes):
+budget_import  →  output/Reference/Budget/Budget_*_<version>.*
 ```
 
 ## Machine map
@@ -107,7 +118,8 @@ period_close_validator  --require-eda --require-standard-report
 | EDA | Investigate patterns (no automatic taxonomy change) |
 | Standard Report | Summarize recurring KPIs |
 | Historical layer | Compare periods |
-| Budget | Future planning layer |
+| Budget snapshot | Freeze the approved budget (`budget_import.py`); never read the workbook in the pipeline |
+| Actual vs Budget | Compare Final with the period budget on covered days (`budget_variance_analysis.py`) |
 
 ## Key invariant
 

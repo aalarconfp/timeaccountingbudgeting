@@ -63,6 +63,29 @@ The report should identify:
 
 Use EDA for everything deeper.
 
+## Actual vs Budget
+
+Layer on top of the Final analysis (`BUDGET_DESIGN.md`). Runs after
+`variation_analysis.py`:
+
+```powershell
+python .\budget_variance_analysis.py --start-date "<start>" --end-date "<end>" --update-kpi-summary
+```
+
+- Output: `output/Integrated/Analysis/Budget/<start>_<end>/` (leaf and
+  Device / Category / Goal / Energy / Domain / line variance, KPIs, top 10
+  deviations, coverage, `Budget_Variance_Report_*.txt`, `Budget_Section_*.md`).
+- Compared on budget-covered days only; coverage is always reported.
+- Variance = Actual − Budget. More Investment / less Consumption is
+  favorable; Maintenance is not judged, except Sleep vs its 7.5 h floor.
+- "Not recorded" (budget, no actual) is a capture alert, not a saving.
+- Standard Report: short section 7 only when a budget covers the period.
+- Monthly KPI Summary: "## Actual vs Budget" after the historical comparison.
+
+Budget KPIs: Investment ratio, discretionary consumption proxy (definition
+above), digital leisure min/day vs its 60-min floor, sleep h/night vs 7.5,
+top 10 absolute deviations.
+
 ## Reporting cadence
 
 - **Interim review (~15 days):** operational, provisional; does not close the period.

@@ -70,6 +70,16 @@ python .\integration_human_review.py --start-date "<start>" --end-date "<end>"
   2026-08-01..15). Its `Final/<start>_<end>/` folder is interim evidence, not
   a close.
 
+### Step B2 — Budget check (optional, budget periods)
+- If `final_analysis.py` was run on the interval and the approved budget
+  covers it, run `budget_variance_analysis.py --start-date "<start>"
+  --end-date "<end>"` (no `--update-kpi-summary`). Output goes to
+  `output/Integrated/Analysis/Budget/<start>_<end>/`; it is provisional like
+  the rest of the interim and is superseded by the monthly close.
+- Use it to catch capture gaps early: a **Not recorded** leaf (e.g. offline
+  work with no Habit entries) is a capture alert to fix while evidence is
+  fresh, not a saving.
+
 ### Step C — Review exceptions
 - Inspect every day above tolerance (uncovered time > 240 min) and any overlap
   or validation failure.
