@@ -44,6 +44,10 @@ PERIOD_BUDGET_TOLERANCE_MIN = 1.0
 ON_BUDGET_TOLERANCE_MIN = 1.0
 # Actual at or below this many minutes counts as "not recorded".
 ZERO_ACTUAL_MIN = 0.01
+# A leaf with budget but no actual is a capture alert ("Not recorded") only
+# when its period budget is at least this many minutes; smaller budgets are
+# "Immaterial" (rounding residue of the workbook's proportional split).
+MATERIAL_BUDGET_MIN = 15.0
 
 # --- Taxonomy -------------------------------------------------------------
 

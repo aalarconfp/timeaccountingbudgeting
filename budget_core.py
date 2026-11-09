@@ -424,7 +424,9 @@ def classify_status(actual: float, budget: float) -> str:
     if has_budget and has_actual:
         return "Budgeted"
     if has_budget:
-        return "Not recorded"
+        return (
+            "Not recorded" if budget >= cfg.MATERIAL_BUDGET_MIN else "Immaterial"
+        )
     if has_actual:
         return "Unbudgeted"
     return "Inactive"
@@ -672,6 +674,8 @@ def rollup(
             assessment = "On budget" if has_judged else "Neutral"
         else:
             assessment = "Favorable" if w > 0 else "Unfavorable"
+        if not_rec.get(group, 0.0) > cfg.ZERO_ACTUAL_MIN and assessment != "Neutral":
+            assessment += " (excl. not recorded)"
         rows.append({
             **dict(zip(dims, group)),
             **_metric_row(a, b, days, actual_total, budget_total),
